@@ -284,6 +284,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .m-tip { margin-top: .4em; font-size: .86em; color: var(--tip); font-weight: 600; line-height: 1.5; word-break: keep-all; }
 .m-tip::before { content: "※ "; }
 .m-check { margin-top: .55em; display: grid; grid-template-columns: repeat(6, 1fr); border: 1px solid var(--grid); border-radius: .45em; overflow: hidden; font-size: .88em; text-align: center; }
+.m-content > .m-check { margin-top: 0; }
 .m-check div { padding: .4em 0; border-left: 1px solid var(--grid); }
 .m-check div:nth-child(-n+6) { background: var(--soft); color: var(--primary); font-weight: 600; }
 .m-check div:nth-child(6n+1) { border-left: none; }
@@ -302,11 +303,17 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .page[data-head="top"] .m-title { font-size: 2.45em; margin-top: .05em; }
 .page[data-head="top"] .m-title .hn, .page[data-head="top"] .m-title .km { color: var(--ink); font-weight: 800; letter-spacing: -.03em; }
 .page[data-head="top"].no-slogan .m-title { padding-right: 3.2em; }
-.page[data-head="top"] .m-team { position: absolute; right: 0; top: 0; margin: 0; border-radius: .45em; padding: .5em 1.5em; font-size: 1.15em; }
+.m-corner { display: contents; }
+/* 슬로건 위형: 이름 칸과 팀명 박스를 오른쪽 위 한 줄(슬로건 줄)에 나란히 둔다 */
+.page[data-head="top"] .m-corner { position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: .6em; }
+.page[data-head="top"] .m-team { margin: 0; border-radius: .45em; padding: .5em 1.5em; font-size: 1.15em; }
 /* 이름 칸: 가운데형은 제목 줄 오른쪽, 슬로건 위형은 팀명 박스 바로 아래. 제목이 칸과 겹치지 않게 오른쪽을 비운다 */
 .page.has-name .m-title { padding-right: 6.2em; }
-.page[data-head="top"] .m-name { top: 2.95em; }
-.page[data-head="top"].has-name .m-title { padding-right: 5.4em; }
+.page[data-head="top"] .m-name { position: static; }
+.page[data-head="top"].has-name .m-title { padding-right: 0; margin-top: .45em; }
+.page[data-head="top"].has-name .m-slogan { padding-right: 14em; }
+/* 슬로건이 없으면 이름 칸·팀명이 들어갈 윗줄을 비워 둔다 (제목이 두 줄로 밀리지 않게) */
+.page[data-head="top"].no-slogan.has-name .m-head { padding-top: 2.7em; }
 .page[data-head="top"] .m-legend { margin-top: .5em; }
 .m-empty { flex: 1; display: grid; place-items: center; color: var(--muted); font-size: 1em; text-align: center; line-height: 1.7; }
 
@@ -497,8 +504,10 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
         <div class="card">
           <header class="m-head">
             <div class="m-title"><span class="hn"></span> <span class="km">Kick manual</span></div>
-            <div class="m-name" hidden>성명 :</div>
-            <div class="m-team"></div>
+            <div class="m-corner">
+              <div class="m-name" hidden>성명 :</div>
+              <div class="m-team"></div>
+            </div>
             <div class="m-slogan"></div>
             <div class="m-legend" hidden>습관 만들기 <b>[셀프체크]</b> &nbsp;80% 이상 😊 &nbsp;50% 이상 △ &nbsp;50% 미만 ★</div>
           </header>
@@ -709,10 +718,11 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
         if (it.guide && !brief) h += '<div class="m-g">' + labels(esc(it.guide)) + "</div>";
         if (it.script && it.script.length && !brief) h += '<div class="m-s">' + it.script.map(scriptLine).join("") + "</div>";
         if (it.tip && !brief) h += '<div class="m-tip">' + esc(it.tip) + "</div>";
-        if (state.check) h += '<div class="m-check">' + days.map(d => "<div>" + d + "</div>").join("") + "<div></div>".repeat(6) + "</div>";
         return h + "</div>";
       }).join("");
-      return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '">' + esc(r.category) + '</div></div><div class="m-content">' + blocks + "</div></div>";
+      // 셀프체크 표는 문장마다가 아니라 단계(접점)마다 맨 아래 하나
+      const check = state.check ? '<div class="m-check">' + days.map(d => "<div>" + d + "</div>").join("") + "<div></div>".repeat(6) + "</div>" : "";
+      return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '">' + esc(r.category) + '</div></div><div class="m-content">' + blocks + check + "</div></div>";
     }).join("");
     fitFont(pg);
   }
@@ -1442,8 +1452,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
             s.querySelectorAll("p").forEach(p => textBox(slide, p));
           }
           textBox(slide, blk.querySelector(".m-tip"));
-          const chk = blk.querySelector(".m-check"); if (chk) table(slide, chk, 6);
         });
+        const chk = row.querySelector(".m-check"); if (chk) table(slide, chk, 6);
       });
       const rv = page.querySelector(".p-review").querySelector(".m-review"); if (rv) table(slide, rv, 2);
     }
