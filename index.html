@@ -252,7 +252,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .m-title { text-align: left; font-size: 2.15em; font-weight: 800; letter-spacing: -.03em; line-height: 1.15; color: var(--ink); }
 .m-title .hn { color: var(--primary); }
 .m-title .km { font-weight: 300; color: var(--muted); letter-spacing: -.01em; }
-.m-name { position: absolute; right: 0; top: .35em; font-size: .82em; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: .3em 1em; min-width: 9.5em; text-align: left; }
+.m-name { position: absolute; right: 0; top: .25em; font-size: 1em; color: var(--muted); border: 1.5px solid var(--line); border-radius: 99px; padding: .45em 1.1em; min-width: 11em; text-align: left; }
 .m-team { display: inline-block; margin-top: 1.05em; background: var(--primary); color: var(--badge-text); font-weight: 700; font-size: 1.05em; padding: .42em 1.6em; border-radius: 99px; letter-spacing: .02em; }
 .m-slogan { margin-top: .85em; font-size: 1.32em; font-weight: 700; letter-spacing: -.02em; color: var(--ink); text-wrap: balance; }
 .m-slogan strong { color: var(--hl); }
@@ -283,16 +283,16 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .m-s .mk { font-size: .85em; margin-right: .25em; }
 .m-tip { margin-top: .4em; font-size: .86em; color: var(--tip); font-weight: 600; line-height: 1.5; word-break: keep-all; }
 .m-tip::before { content: "※ "; }
-.m-check { margin-top: .55em; display: grid; grid-template-columns: repeat(6, 1fr); border: 1px solid var(--grid); border-radius: .45em; overflow: hidden; font-size: .74em; text-align: center; }
-.m-check div { padding: .3em 0; border-left: 1px solid var(--grid); }
+.m-check { margin-top: .55em; display: grid; grid-template-columns: repeat(6, 1fr); border: 1px solid var(--grid); border-radius: .45em; overflow: hidden; font-size: .88em; text-align: center; }
+.m-check div { padding: .4em 0; border-left: 1px solid var(--grid); }
 .m-check div:nth-child(-n+6) { background: var(--soft); color: var(--primary); font-weight: 600; }
 .m-check div:nth-child(6n+1) { border-left: none; }
-.m-check div:nth-child(n+7) { height: 2.1em; border-top: 1px solid var(--grid); }
-.m-review { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--grid); border-radius: .5em; overflow: hidden; margin-top: .6em; font-size: .82em; }
+.m-check div:nth-child(n+7) { height: 2.6em; border-top: 1px solid var(--grid); }
+.m-review { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--grid); border-radius: .5em; overflow: hidden; margin-top: .6em; font-size: .92em; }
 .m-review div { padding: .4em .8em; }
 .m-review div:nth-child(-n+2) { background: var(--soft); color: var(--primary); font-weight: 700; text-align: center; }
 .m-review div:nth-child(2n) { border-left: 1px solid var(--grid); }
-.m-review div:nth-child(n+3) { height: 4.2em; border-top: 1px solid var(--grid); }
+.m-review div:nth-child(n+3) { height: 5em; border-top: 1px solid var(--grid); }
 /* SEMA CONSULTING 로고: 종이 위쪽 여백, 오른쪽 */
 .m-logo { position: absolute; top: 3.6mm; right: 11mm; height: 4.4mm; z-index: 2; }
 /* 머리글 '슬로건 위형': 슬로건(가는 글씨) → 큰 제목, 팀명은 오른쪽 위 박스 */
@@ -304,9 +304,9 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .page[data-head="top"].no-slogan .m-title { padding-right: 3.2em; }
 .page[data-head="top"] .m-team { position: absolute; right: 0; top: 0; margin: 0; border-radius: .45em; padding: .5em 1.5em; font-size: 1.15em; }
 /* 이름 칸: 가운데형은 제목 줄 오른쪽, 슬로건 위형은 팀명 박스 바로 아래. 제목이 칸과 겹치지 않게 오른쪽을 비운다 */
-.page.has-name .m-title { padding-right: 3.8em; }
-.page[data-head="top"] .m-name { top: 3.6em; }
-.page[data-head="top"].has-name .m-title { padding-right: 3.4em; }
+.page.has-name .m-title { padding-right: 6.2em; }
+.page[data-head="top"] .m-name { top: 2.95em; }
+.page[data-head="top"].has-name .m-title { padding-right: 5.4em; }
 .page[data-head="top"] .m-legend { margin-top: .5em; }
 .m-empty { flex: 1; display: grid; place-items: center; color: var(--muted); font-size: 1em; text-align: center; line-height: 1.7; }
 
@@ -446,8 +446,12 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
           <label class="toggle"><input type="checkbox" id="optMerge"> 같은 단계가 연달아 오면 뱃지 하나로 묶기</label>
           <label class="toggle"><input type="checkbox" id="optCheck"> 셀프체크 표 넣기 (Daily Check)</label>
           <div id="checkOpts" style="padding-left:24px">
-            <label class="f" for="optStart">체크 시작일 <small>일요일 빼고 6일</small></label>
-            <input type="date" id="optStart">
+            <label class="toggle"><input type="checkbox" id="optDates"> 체크표 맨 윗줄에 날짜 넣기</label>
+            <div id="dateOpts">
+              <label class="f" for="optStart">체크 시작일 <small>일요일 빼고 6일</small></label>
+              <input type="date" id="optStart">
+            </div>
+            <div class="hint" id="noDateHint">날짜를 빼면 맨 윗줄이 빈칸으로 나가서 손으로 적을 수 있습니다.</div>
             <label class="toggle"><input type="checkbox" id="optReview"> '잘 하고 있는 점 / 노력이 필요한 점' 칸 넣기</label>
             <label class="toggle"><input type="checkbox" id="optCheckFull"> 응대 멘트·가이드·주의 문구도 같이 넣기</label>
             <div class="hint">기본은 핵심 행동 지침(굵은 문장)과 체크표만 넣습니다.</div>
@@ -537,7 +541,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     theme: "classic", hospital: "OO병원", team: "접수데스크팀",
     slogan: "나의 가치를 높이는 **자연스러운 미소 장착**", emoji: "",
     selected: ["c01", "c02", "c03", "c04"],
-    head: "center", logo: true, merge: true, check: false, checkFull: false, shrink: true, nameBox: false, review: false, start: nextMonday(), fs: 100,
+    head: "center", logo: true, merge: true, check: false, checkFull: false, shrink: true, nameBox: false, review: false, dates: true, start: nextMonday(), fs: 100,
     src: "전체", groupBy: "category", open: {}, overrides: {}, customs: [],
     pages: null, cur: 0
   };
@@ -694,7 +698,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       if (state.merge && last && last.category === it.category) last.items.push(it);
       else rows.push({ category: it.category, items: [it] });
     });
-    const days = checkDays();
+    const days = state.dates ? checkDays() : Array(6).fill("&nbsp;");   // 날짜를 빼면 맨 윗줄은 손으로 적는 빈칸
     // 셀프체크 표를 넣으면 기본은 핵심 행동 지침만 남긴다 (멘트·가이드·주의 문구 생략)
     const brief = state.check && !state.checkFull;
     body.innerHTML = rows.map(r => {
@@ -927,6 +931,9 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     document.getElementById("optCheck").checked = state.check;
     document.getElementById("optReview").checked = state.review;
     document.getElementById("optStart").value = state.start;
+    document.getElementById("optDates").checked = state.dates;
+    document.getElementById("dateOpts").hidden = !state.dates;
+    document.getElementById("noDateHint").hidden = state.dates;
     document.getElementById("checkOpts").hidden = !state.check;
     document.getElementById("optFs").value = state.fs;
     document.getElementById("optCheckFull").checked = state.checkFull;
@@ -1120,6 +1127,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   F("optCheck").addEventListener("change", e => { state.check = e.target.checked; if (state.check) state.nameBox = true; renderInfo(); update({ panel: false }); });
   F("optName").addEventListener("change", e => { state.nameBox = e.target.checked; update({ panel: false }); });
   F("optReview").addEventListener("change", e => { state.review = e.target.checked; update({ panel: false }); });
+  F("optDates").addEventListener("change", e => { state.dates = e.target.checked; renderInfo(); update({ panel: false }); });
   F("optStart").addEventListener("change", e => { state.start = e.target.value; update({ panel: false }); });
   F("optCheckFull").addEventListener("change", e => { state.checkFull = e.target.checked; update({ panel: false }); });
   F("optShrink").addEventListener("change", e => { state.shrink = e.target.checked; update({ panel: false }); });
