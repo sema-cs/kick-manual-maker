@@ -1,0 +1,1232 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>킥매뉴얼 메이커</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap">
+<style>
+/* 레이아웃: 왼쪽 조립 패널 + 오른쪽 A4 종이 미리보기. 종이(.page)는 화면 테마와 무관하게 항상 흰 종이로 둔다. */
+
+/* PC에 Pretendard가 설치돼 있으면 그것을, 없으면 웹 글꼴을, 그것도 안 되면 Noto Sans KR을 쓴다. PPT도 Pretendard로 나간다. */
+@font-face {
+  font-family: "Pretendard Web"; font-style: normal; font-weight: 45 920; font-display: swap;
+  src: url("https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/woff2/PretendardVariable.woff2") format("woff2-variations");
+}
+
+/* ───────── 앱 셸 토큰 (화면 라이트/다크) ───────── */
+:root {
+  --ui-bg: #F2F3F5; --ui-panel: #FFFFFF; --ui-line: #DFE2E7; --ui-line-2: #ECEEF1;
+  --ui-ink: #1F2329; --ui-ink-2: #4A515B; --ui-muted: #858C96; --ui-hover: #F4F5F7;
+  --ui-field: #FFFFFF; --ui-stage: #E4E7EB; --ui-strong: #1F2329; --ui-strong-ink: #FFFFFF;
+  --ui-good: #2F9467; --ui-bad: #D04343; --ui-hl: var(--hl); --ui-toast: #1F2329; --ui-toast-ink: #FFFFFF;
+  --font: "Pretendard", "Pretendard Web", "Noto Sans KR", "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ui-bg: #14161A; --ui-panel: #1B1E23; --ui-line: #2E333B; --ui-line-2: #262A31;
+    --ui-ink: #E7E9EC; --ui-ink-2: #C1C6CE; --ui-muted: #8C939D; --ui-hover: #23272E;
+    --ui-field: #21252B; --ui-stage: #0F1114; --ui-strong: #E7E9EC; --ui-strong-ink: #14161A;
+    --ui-good: #4CC08A; --ui-bad: #F06A6A; --ui-hl: color-mix(in srgb, var(--hl) 45%, #FFFFFF);
+    --ui-toast: #E7E9EC; --ui-toast-ink: #14161A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ui-bg: #14161A; --ui-panel: #1B1E23; --ui-line: #2E333B; --ui-line-2: #262A31;
+  --ui-ink: #E7E9EC; --ui-ink-2: #C1C6CE; --ui-muted: #8C939D; --ui-hover: #23272E;
+  --ui-field: #21252B; --ui-stage: #0F1114; --ui-strong: #E7E9EC; --ui-strong-ink: #14161A;
+  --ui-good: #4CC08A; --ui-bad: #F06A6A; --ui-hl: color-mix(in srgb, var(--hl) 45%, #FFFFFF);
+  --ui-toast: #E7E9EC; --ui-toast-ink: #14161A; color-scheme: dark;
+}
+
+/* ───────── 디자인 폼(매뉴얼 테마) 토큰 — 종이 위 색 ───────── */
+:root, :root[data-form="classic"] {
+  --bg: #E6EBF2; --bg-deco: #D3DCE8;
+  --primary: #22385C; --accent: #3D5F93; --line: #7F95B6;
+  --soft: #EEF2F8; --badge-text: #FFFFFF; --hl: #2F55A0;
+  --ink: #23272F; --muted: #6A7280; --tip: #C0392B;
+  --paper: #FFFFFF; --rule: #ECEEF1; --rule-2: #E3E6EA; --grid: #DADDE2; --script: #3F4650; --script-q: #2E343C; --struck: #A3A9B1;
+}
+:root[data-form="beige"] {
+  --bg: #EDE3D6; --bg-deco: #E0D1BE;
+  --primary: #6E5440; --accent: #A98568; --line: #C3A687;
+  --soft: #FAF4EC; --hl: #94704F; --ink: #3A2F27; --muted: #85776B; --tip: #B5523B;
+}
+:root[data-form="rose"] {
+  --bg: #F3E2E1; --bg-deco: #E9CBCB;
+  --primary: #9E5361; --accent: #CF8F98; --line: #DDA7AD;
+  --soft: #FCF3EF; --hl: #B65C6B; --ink: #3D2A2E; --muted: #8A7276; --tip: #C2414F;
+}
+:root[data-form="sage"] {
+  --bg: #E2EADF; --bg-deco: #CCDAC8;
+  --primary: #355543; --accent: #7F9F86; --line: #9DB8A2;
+  --soft: #F3F7EF; --hl: #44705A; --ink: #26322B; --muted: #6C7A71; --tip: #B44A3A;
+}
+:root[data-form="charcoal"] {
+  --bg: #E9EAEC; --bg-deco: #D9DBDF;
+  --primary: #2B2F36; --accent: #6B7280; --line: #A3A8B0;
+  --soft: #F3F4F6; --hl: #1F2937; --ink: #23262B; --muted: #6B7078; --tip: #C0392B;
+}
+:root[data-form="teal"] {
+  --bg: #E0ECEC; --bg-deco: #C9DEDE;
+  --primary: #1F5F66; --accent: #5E9A9F; --line: #8DB8BB;
+  --soft: #EEF6F6; --hl: #1F7A82; --ink: #1F2C2E; --muted: #66777A; --tip: #C0392B;
+}
+:root[data-form="lavender"] {
+  --bg: #E9E6F2; --bg-deco: #D8D2EA;
+  --primary: #5B4F8A; --accent: #9389BF; --line: #ADA4D1;
+  --soft: #F4F2FA; --hl: #6A5AAE; --ink: #2A2638; --muted: #757087; --tip: #C2414F;
+}
+:root[data-form="terracotta"] {
+  --bg: #F1E6DE; --bg-deco: #E6D2C4;
+  --primary: #A0522D; --accent: #C98A63; --line: #D7AE90;
+  --soft: #FBF4EE; --hl: #B5562B; --ink: #3A2A22; --muted: #86756A; --tip: #9B2C2C;
+}
+
+/* ───────── 앱 셸 ───────── */
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; font-family: var(--font); background: var(--ui-bg); color: var(--ui-ink);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px; -webkit-font-smoothing: antialiased;
+}
+.app { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; height: 100%; }
+
+.panel { display: flex; flex-direction: column; background: var(--ui-panel); border: 1px solid var(--ui-line); border-radius: 16px; min-height: 0; min-width: 0; overflow: hidden; }
+.panel-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--ui-line-2); }
+.panel-head h1 { margin: 0; font-size: 20px; letter-spacing: -0.4px; text-wrap: balance; }
+.panel-head p { margin: 4px 0 0; font-size: 12.5px; color: var(--ui-muted); }
+.panel-body { flex: 1; overflow-y: auto; padding: 4px 12px 20px; }
+.panel-foot { padding: 12px; border-top: 1px solid var(--ui-line-2); display: flex; gap: 8px; }
+
+.sec { border: 1px solid var(--ui-line-2); border-radius: 14px; margin: 10px 0; }
+.sec > summary { list-style: none; cursor: pointer; padding: 13px 15px; font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+.sec > summary::-webkit-details-marker { display: none; }
+.sec > summary::after { content: "▾"; margin-left: auto; color: var(--ui-muted); transition: transform .15s; }
+.sec:not([open]) > summary::after { transform: rotate(-90deg); }
+.sec .num { width: 22px; height: 22px; border-radius: 50%; background: var(--ui-strong); color: var(--ui-strong-ink); font-size: 12px; display: inline-grid; place-items: center; font-variant-numeric: tabular-nums; }
+.sec .count { font-weight: 600; font-size: 12px; color: #FFFFFF; background: var(--accent); border-radius: 99px; padding: 1px 8px; font-variant-numeric: tabular-nums; }
+.sec-body { padding: 0 15px 15px; }
+
+label.f { display: block; font-size: 12.5px; font-weight: 600; color: var(--ui-ink-2); margin: 12px 0 5px; }
+label.f small { font-weight: 400; color: var(--ui-muted); }
+input[type=text], input[type=date], textarea, select {
+  width: 100%; font: inherit; font-size: 14px; padding: 9px 11px; border: 1px solid var(--ui-line); border-radius: 9px; background: var(--ui-field); color: var(--ui-ink);
+}
+textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
+input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.btn { font: inherit; font-size: 13.5px; font-weight: 600; border: 1px solid var(--ui-line); background: var(--ui-panel); color: var(--ui-ink); padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.btn:hover { background: var(--ui-hover); }
+.btn.primary { background: var(--primary); color: #FFFFFF; border-color: var(--primary); }
+.btn.primary:hover { filter: brightness(1.1); }
+.btn.sm { padding: 5px 10px; font-size: 12.5px; border-radius: 8px; }
+.btn.grow { flex: 1; }
+.icon-btn { border: none; background: transparent; cursor: pointer; padding: 4px 6px; border-radius: 6px; color: var(--ui-muted); font-size: 13px; line-height: 1; font-family: inherit; }
+.icon-btn:hover { background: var(--ui-hover); color: var(--ui-ink); }
+.icon-btn:disabled { opacity: .3; cursor: default; background: transparent; }
+
+.themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 9px; }
+.theme-card { border: 2px solid var(--ui-line-2); border-radius: 12px; padding: 10px; cursor: pointer; background: var(--ui-panel); color: var(--ui-ink); text-align: left; font: inherit; }
+.theme-card.on { border-color: var(--ui-strong); }
+.theme-card .sw { display: flex; height: 26px; border-radius: 7px; overflow: hidden; margin-bottom: 8px; }
+.theme-card .sw span { flex: 1; }
+.theme-card b { font-size: 13.5px; display: block; }
+.theme-card small { font-size: 11.5px; color: var(--ui-muted); }
+
+.sub { margin-top: 12px; }
+.sub > summary { list-style: none; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--ui-ink-2); display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+.sub > summary::-webkit-details-marker { display: none; }
+.sub > summary::before { content: "▸"; color: var(--ui-muted); transition: transform .15s; }
+.sub[open] > summary::before { transform: rotate(90deg); }
+.sub > summary small { font-weight: 400; color: var(--ui-muted); }
+.sub > .emoji-row { margin-top: 8px; }
+.emoji-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.emoji-row button { width: 34px; height: 34px; border: 1px solid var(--ui-line); border-radius: 9px; background: var(--ui-panel); font-size: 17px; cursor: pointer; }
+.emoji-row button.on { border-color: var(--primary); background: var(--soft); }
+.emoji-row input { width: 64px; text-align: center; }
+
+.sel-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sel-list li { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 10px; border: 1px solid var(--ui-line-2); border-radius: 10px; background: var(--ui-hover); cursor: grab; }
+.sel-list li.dragging { opacity: .4; }
+.sel-list li.drop-before { box-shadow: 0 -3px 0 var(--accent); }
+.sel-list .idx { font-size: 11.5px; color: var(--ui-muted); width: 16px; text-align: right; font-variant-numeric: tabular-nums; }
+.sel-list .txt { flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.35; }
+.sel-list .txt b { color: var(--ui-hl); }
+.sel-list .txt span { display: block; color: var(--ui-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty { font-size: 12.5px; color: var(--ui-muted); text-align: center; padding: 14px 0; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font: inherit; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--ui-line); background: var(--ui-panel); color: var(--ui-ink-2); cursor: pointer; }
+.chip:hover { background: var(--ui-hover); }
+.chip.on { background: var(--ui-strong); border-color: var(--ui-strong); color: var(--ui-strong-ink); }
+.pool-tools { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: 6px; margin-top: 8px; }
+.presets { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.presets .chip { font-weight: 500; }
+.grp { margin-top: 12px; }
+.grp-h { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--ui-hl); padding: 4px 2px; }
+.grp-h small { color: var(--ui-muted); font-weight: 500; }
+.grp-h .line { flex: 1; height: 1px; background: var(--ui-line-2); }
+.pool-item { display: flex; gap: 9px; padding: 8px 6px 8px 8px; border-radius: 9px; align-items: flex-start; }
+.pool-item:hover { background: var(--ui-hover); }
+.pool-item input { margin-top: 3px; accent-color: var(--primary); width: 16px; height: 16px; flex: none; }
+.pool-item .body { flex: 1; min-width: 0; cursor: pointer; }
+.pool-item .t { font-size: 13px; line-height: 1.45; color: var(--ui-ink); }
+.pool-item .t strong { color: var(--ui-hl); }
+.pool-item .pv { font-size: 12px; color: var(--ui-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pool-item .meta { font-size: 11px; color: var(--ui-muted); margin-top: 3px; display: flex; gap: 5px; flex-wrap: wrap; }
+.tag { display: inline-block; font-size: 10.5px; font-weight: 600; padding: 1px 7px; border-radius: 5px; background: var(--ui-line-2); color: var(--ui-ink-2); }
+.tag.cat { background: var(--soft); color: var(--primary); }
+.tag.custom { background: #FFF1CC; color: #7A5800; }
+
+.form-actions { display: flex; gap: 6px; margin-top: 12px; }
+.hint { font-size: 11.5px; color: var(--ui-muted); margin-top: 6px; line-height: 1.5; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.row2 > div { min-width: 0; }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 10px 0 0; cursor: pointer; }
+.toggle input { accent-color: var(--primary); width: 16px; height: 16px; }
+input[type=range] { width: 100%; accent-color: var(--primary); }
+.field-err { color: var(--ui-bad); font-size: 12px; margin-top: 6px; }
+
+.viewer { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--ui-stage); border-radius: 16px; overflow: hidden; }
+.viewer-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; padding: 10px 16px; background: var(--ui-panel); border-bottom: 1px solid var(--ui-line); font-size: 13px; }
+.fill { display: flex; align-items: center; gap: 8px; color: var(--ui-ink-2); }
+.fill .meter { width: 140px; height: 7px; border-radius: 99px; background: var(--ui-line-2); overflow: hidden; }
+.fill .meter i { display: block; height: 100%; background: var(--ui-good); border-radius: 99px; transition: width .2s; }
+.fill b { font-variant-numeric: tabular-nums; }
+.fill.over .meter i { background: var(--ui-bad); }
+.fill.over b { color: var(--ui-bad); }
+.viewer-bar .sp { flex: 1; }
+.viewer-bar .note { color: var(--ui-muted); font-size: 12px; }
+.zoom { display: flex; align-items: center; gap: 4px; }
+.zoom .z-btn { font: inherit; font-size: 13px; font-weight: 600; min-width: 30px; height: 30px; padding: 0 9px; border: 1px solid var(--ui-line); border-radius: 8px; background: var(--ui-panel); color: var(--ui-ink); cursor: pointer; }
+.zoom .z-btn:hover { background: var(--ui-hover); }
+.zoom .z-btn.on { background: var(--ui-strong); border-color: var(--ui-strong); color: var(--ui-strong-ink); }
+.zoom select { width: auto; height: 30px; padding: 0 8px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.stage-wrap { flex: 1; overflow: auto; padding: 24px; }
+.stage { transform-origin: top left; margin: 0 auto; }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30;
+  display: flex; align-items: center; gap: 12px; max-width: min(560px, calc(100% - 32px));
+  background: var(--ui-toast); color: var(--ui-toast-ink); padding: 11px 12px 11px 16px; border-radius: 12px; font-size: 13.5px; line-height: 1.45;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .25); }
+.toast button { font: inherit; font-weight: 700; font-size: 13px; border: none; border-radius: 8px; padding: 6px 11px; cursor: pointer; background: transparent; color: inherit; white-space: nowrap; text-decoration: underline; }
+
+/* ───────── A4 템플릿 (종이) ───────── */
+.page {
+  width: 210mm; height: 297mm; overflow: hidden; position: relative;
+  background: var(--bg); color: var(--ink); font-family: var(--font);
+  font-size: calc(15px * var(--fs, 1));
+  box-shadow: 0 10px 40px rgba(20, 24, 31, .18);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.page::before, .page::after { content: ""; position: absolute; border-radius: 50%; background: var(--bg-deco); }
+.page::before { width: 120mm; height: 120mm; right: -46mm; top: -52mm; }
+.page::after { width: 80mm; height: 80mm; left: -34mm; bottom: -30mm; }
+.card { position: absolute; inset: 11mm; z-index: 1; background: var(--paper); border-radius: 7mm; padding: 11mm 11mm 9mm; display: flex; flex-direction: column; }
+.m-head { position: relative; text-align: center; }
+.m-title { text-align: left; font-size: 2.15em; font-weight: 800; letter-spacing: -.03em; line-height: 1.15; color: var(--ink); }
+.m-title .hn { color: var(--primary); }
+.m-title .km { font-weight: 300; color: var(--muted); letter-spacing: -.01em; }
+.m-name { position: absolute; right: 0; top: .35em; font-size: .82em; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: .3em 1em; min-width: 9.5em; text-align: left; }
+.m-team { display: inline-block; margin-top: 1.05em; background: var(--primary); color: var(--badge-text); font-weight: 700; font-size: 1.05em; padding: .42em 1.6em; border-radius: 99px; letter-spacing: .02em; }
+.m-slogan { margin-top: .85em; font-size: 1.32em; font-weight: 700; letter-spacing: -.02em; color: var(--ink); text-wrap: balance; }
+.m-slogan strong { color: var(--hl); }
+.m-legend { margin-top: .6em; font-size: .78em; color: var(--muted); }
+.m-legend b { color: var(--primary); }
+.m-divider { height: 2px; background: linear-gradient(90deg, transparent, var(--line), transparent); margin: 1.1em 0 .4em; opacity: .7; }
+.m-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.m-row { display: grid; grid-template-columns: 6.4em 1fr; gap: 1.2em; padding: 1em 0; border-bottom: 1px solid var(--rule); }
+.m-row:last-child { border-bottom: none; }
+.m-badge-col { display: flex; justify-content: center; align-items: flex-start; }
+.m-badge { width: 5.6em; height: 5.6em; border-radius: 50%; border: .2em solid var(--line); background: var(--soft);
+  display: grid; place-items: center; text-align: center; padding: .4em;
+  color: var(--primary); font-weight: 800; font-size: 1em; line-height: 1.2; letter-spacing: -.03em; word-break: keep-all; }
+.m-badge.long { font-size: .84em; }
+.m-badge.xlong { font-size: .72em; }
+.m-content { display: flex; flex-direction: column; gap: .85em; min-width: 0; padding-top: .15em; }
+.m-block + .m-block { padding-top: .85em; border-top: 1px dashed var(--rule-2); }
+.m-t { font-size: 1.1em; font-weight: 700; line-height: 1.5; letter-spacing: -.025em; word-break: keep-all; }
+.m-t strong { color: var(--hl); font-weight: 800; }
+.m-t .lbl, .m-s .lbl { display: inline-block; font-size: .78em; font-weight: 700; color: var(--primary); background: var(--soft); border: 1px solid var(--line); border-radius: .4em; padding: .05em .45em; margin-right: .35em; vertical-align: .1em; }
+.m-g { margin-top: .3em; font-size: .9em; color: var(--muted); line-height: 1.5; word-break: keep-all; }
+.m-g::before { content: "( "; } .m-g::after { content: " )"; }
+.m-s { margin-top: .35em; font-size: .97em; line-height: 1.6; color: var(--script); word-break: keep-all; padding-left: .9em; border-left: .18em solid var(--soft); }
+.m-s p { margin: .12em 0; }
+.m-s .q { color: var(--script-q); }
+.m-s .dir { color: var(--muted); font-size: .92em; }
+.m-s .bad .q { color: var(--struck); text-decoration: line-through; text-decoration-color: var(--tip); }
+.m-s .mk { font-size: .85em; margin-right: .25em; }
+.m-tip { margin-top: .4em; font-size: .86em; color: var(--tip); font-weight: 600; line-height: 1.5; word-break: keep-all; }
+.m-tip::before { content: "※ "; }
+.m-check { margin-top: .55em; display: grid; grid-template-columns: repeat(6, 1fr); border: 1px solid var(--grid); border-radius: .45em; overflow: hidden; font-size: .74em; text-align: center; }
+.m-check div { padding: .3em 0; border-left: 1px solid var(--grid); }
+.m-check div:nth-child(-n+6) { background: var(--soft); color: var(--primary); font-weight: 600; }
+.m-check div:nth-child(6n+1) { border-left: none; }
+.m-check div:nth-child(n+7) { height: 2.1em; border-top: 1px solid var(--grid); }
+.m-review { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--grid); border-radius: .5em; overflow: hidden; margin-top: .6em; font-size: .82em; }
+.m-review div { padding: .4em .8em; }
+.m-review div:nth-child(-n+2) { background: var(--soft); color: var(--primary); font-weight: 700; text-align: center; }
+.m-review div:nth-child(2n) { border-left: 1px solid var(--grid); }
+.m-review div:nth-child(n+3) { height: 4.2em; border-top: 1px solid var(--grid); }
+.m-empty { flex: 1; display: grid; place-items: center; color: var(--muted); font-size: 1em; text-align: center; line-height: 1.7; }
+
+/* ───────── 인쇄 ───────── */
+@page { size: A4 portrait; margin: 0; }
+@media print {
+  html, body { background: #FFFFFF; height: auto; padding: 0; }
+  .app { display: block; height: auto; }
+  .panel, .viewer-bar, .toast { display: none !important; }
+  .viewer { background: none; display: block; border-radius: 0; }
+  .stage-wrap { padding: 0; overflow: visible; display: block; }
+  .stage { transform: none !important; width: auto !important; height: auto !important; }
+  .page { box-shadow: none; width: 210mm; height: 296.9mm; break-after: avoid; }
+}
+@media (max-width: 900px) {
+  html, body { height: auto; }
+  .app { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .panel-body { overflow: visible; }
+  .viewer { min-height: 70vh; }
+  .stage-wrap { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="panel">
+    <div class="panel-head">
+      <h1>킥매뉴얼 메이커</h1>
+      <p>디자인 폼을 고르고 단락을 체크하면 오른쪽 A4에 바로 반영됩니다.</p>
+    </div>
+    <div class="panel-body">
+
+      <details class="sec" open>
+        <summary><span class="num">1</span>디자인 폼</summary>
+        <div class="sec-body"><div class="themes" id="themes"></div></div>
+      </details>
+
+      <details class="sec" open>
+        <summary><span class="num">2</span>기본 정보</summary>
+        <div class="sec-body">
+          <div class="row2">
+            <div><label class="f" for="hospital">병원명</label><input type="text" id="hospital" placeholder="예: OO병원"></div>
+            <div><label class="f" for="team">부서/팀명</label><input type="text" id="team" placeholder="예: 코디팀"></div>
+          </div>
+          <label class="f" for="slogan">핵심 가치 문구(슬로건) <small>**단어** = 강조</small></label>
+          <input type="text" id="slogan" placeholder="예: 나의 가치를 높이는 **자연스러운 미소 장착**">
+          <select id="sloganPreset" style="margin-top:6px" aria-label="원본 슬로건 선택"></select>
+          <details class="sub" id="emojiSec">
+            <summary>이모지 <small>(선택)</small> <span id="emojiNow"></span></summary>
+            <div class="emoji-row" id="emojiRow"></div>
+          </details>
+        </div>
+      </details>
+
+      <details class="sec" open>
+        <summary><span class="num">3</span>선택된 단락 · 순서 <span class="count" id="selCount">0</span></summary>
+        <div class="sec-body">
+          <ul class="sel-list" id="selList"></ul>
+          <div class="hint">항목을 끌어서 놓거나 ▲▼ 버튼으로 순서를 바꿀 수 있습니다.</div>
+        </div>
+      </details>
+
+      <details class="sec" open>
+        <summary><span class="num">4</span>매뉴얼 단락 풀</summary>
+        <div class="sec-body">
+          <label class="f">계열</label>
+          <div class="chips" id="srcChips"></div>
+          <label class="f">원본 장표 한 번에 담기 <small>원본 순서·팀명·슬로건까지</small></label>
+          <div class="presets" id="presets"></div>
+          <div class="pool-tools">
+            <input type="text" id="search" placeholder="검색 (예: 예고, 대기, 눈맞춤)" aria-label="단락 검색">
+            <select id="groupBy" aria-label="묶어 보기 기준">
+              <option value="category">단계별</option>
+              <option value="dept">부서별</option>
+            </select>
+          </div>
+          <div id="pool"></div>
+        </div>
+      </details>
+
+      <details class="sec" id="formSec">
+        <summary><span class="num">5</span><span id="formTitle">새 단락 추가</span></summary>
+        <div class="sec-body">
+          <div class="row2">
+            <div><label class="f" for="fCat">단계(원형 뱃지)</label><input type="text" id="fCat" placeholder="예: 맞이"></div>
+            <div><label class="f" for="fDept">부서</label><input type="text" id="fDept" placeholder="예: 코디팀"></div>
+          </div>
+          <label class="f" for="fTitle">핵심 행동 지침 <small>**강조할 단어**</small></label>
+          <textarea id="fTitle" rows="2" placeholder="예: 고객 내원 시, **기립하여 맞이 인사**합니다."></textarea>
+          <label class="f" for="fGuide">행동 가이드 <small>괄호로 표시됨</small></label>
+          <input type="text" id="fGuide" placeholder="예: 대기실 소파 제스처 안내">
+          <label class="f" for="fScript">응대 멘트 <small>한 줄 = 한 대사</small></label>
+          <textarea id="fScript" rows="3" placeholder="안녕하세요^^&#10;[재진] 오랜만에 오셨네요~&#10;(제스처 하며) 이쪽으로 안내해 드리겠습니다."></textarea>
+          <label class="f" for="fTip">주의 문구 <small>선택</small></label>
+          <input type="text" id="fTip" placeholder="예: 타 환자 정보 노출에 주의합니다.">
+          <div class="hint">대사 줄 앞의 <b>[라벨]</b>은 꼬리표, <b>(지문)</b>은 행동 지시, <b>❌ / ⭕</b>는 잘못된 예·좋은 예로 표시됩니다.</div>
+          <div class="field-err" id="fErr" hidden>단계와 핵심 행동 지침을 입력해 주세요.</div>
+          <div class="form-actions">
+            <button class="btn primary grow" id="fSave">추가하고 선택</button>
+            <button class="btn" id="fReset" hidden>원본으로</button>
+            <button class="btn" id="fCancel" hidden>취소</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary><span class="num">6</span>레이아웃 옵션</summary>
+        <div class="sec-body">
+          <label class="toggle"><input type="checkbox" id="optMerge"> 같은 단계가 연달아 오면 뱃지 하나로 묶기</label>
+          <label class="toggle"><input type="checkbox" id="optCheck"> 셀프체크 표 넣기 (Daily Check)</label>
+          <div id="checkOpts" style="padding-left:24px">
+            <label class="f" for="optStart">체크 시작일 <small>일요일 빼고 6일</small></label>
+            <input type="date" id="optStart">
+            <label class="toggle"><input type="checkbox" id="optReview"> '잘 하고 있는 점 / 노력이 필요한 점' 칸 넣기</label>
+          </div>
+          <label class="f" for="optFs">글자 크기 <small id="fsVal">100%</small></label>
+          <input type="range" id="optFs" min="70" max="120" step="1">
+          <div class="form-actions"><button class="btn grow" id="autoFit">A4 1장에 자동 맞춤</button></div>
+          <div class="form-actions">
+            <button class="btn sm grow" id="exportJson">단락 데이터 내보내기</button>
+            <button class="btn sm grow" id="importJson">불러오기</button>
+            <input type="file" id="importFile" accept=".json,application/json" hidden>
+          </div>
+          <div class="hint" id="exportHint">직접 추가·수정한 단락은 이 브라우저에만 저장됩니다. 다른 PC로 옮길 땐 '내보내기'로 받은 JSON을 '불러오기' 하세요.</div>
+        </div>
+      </details>
+    </div>
+    <div class="panel-foot">
+      <button class="btn" id="resetAll" title="선택·입력값을 모두 비웁니다">초기화</button>
+      <button class="btn" id="printBtn" title="A4 인쇄">🖨 인쇄</button>
+      <button class="btn primary grow" id="pptBtn" title="PowerPoint에서 고칠 수 있는 A4 슬라이드">PPT 다운로드</button>
+      <button class="btn primary grow" id="pdfBtn">PDF 다운로드</button>
+    </div>
+  </aside>
+
+  <main class="viewer">
+    <div class="viewer-bar">
+      <div class="fill" id="fill"><span>A4 채움</span><span class="meter"><i></i></span><b>0%</b></div>
+      <div class="zoom" id="zoom">
+        <button class="z-btn" data-zoom="out" aria-label="축소" title="축소 (Ctrl + 휠)">−</button>
+        <select id="zoomSel" aria-label="배율"></select>
+        <button class="z-btn" data-zoom="in" aria-label="확대" title="확대 (Ctrl + 휠)">+</button>
+        <button class="z-btn" data-zoom="page" title="A4 한 장 전체가 보이게">전체 보기</button>
+        <button class="z-btn" data-zoom="width" title="가로 폭에 맞추기">너비 맞춤</button>
+      </div>
+      <div class="sp"></div>
+      <span class="note" id="printNote">인쇄할 땐 여백 '없음', 배경 그래픽 체크</span>
+    </div>
+    <div class="stage-wrap" id="stageWrap">
+      <div class="stage" id="stage">
+        <div class="page" id="page">
+          <div class="card">
+            <header class="m-head">
+              <div class="m-title"><span class="hn" id="pHospital"></span> <span class="km">Kick manual</span></div>
+              <div class="m-name" id="pName" hidden>성명 :</div>
+              <div class="m-team" id="pTeam"></div>
+              <div class="m-slogan" id="pSlogan"></div>
+              <div class="m-legend" id="pLegend" hidden>습관 만들기 <b>[셀프체크]</b> &nbsp;80% 이상 😊 &nbsp;50% 이상 △ &nbsp;50% 미만 ★</div>
+            </header>
+            <div class="m-divider"></div>
+            <section class="m-body" id="pBody"></section>
+            <div id="pReview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" hidden><span id="toastMsg"></span><button id="toastAct" hidden></button></div>
+
+<script id="manual-data" type="application/json">{"version": "2026-10-28", "format": "title의 **…**는 테마 컬러 강조, script는 대사 줄 배열(줄 앞 [라벨]·(행동 지문)·❌/⭕ 표기 지원), tip은 주의 문구", "sources": {"공통": "CS_BP/1. PDCA/3. CS매뉴얼/1. MOT매뉴얼/0. 공통계열/0. PDCA/공통계열_(P)결과,(D)계획_OO병원_CS_MOT매뉴얼_부서별 Kick manual_v1.0_20250616.pptx", "정형": "CS_BP/1. PDCA/3. CS매뉴얼/1. MOT매뉴얼/1. 정형계열/0. PDCA/정형계열_(P)결과,(D)계획_OO병원_CS_MOT매뉴얼_부서별 Kick manual_v1.1_20260220.pptx", "미용": "CS_BP/1. PDCA/3. CS매뉴얼/1. MOT매뉴얼/2. 미용계열/0. PDCA/미용계열_(P)결과,(D)계획_OO병원_CS_MOT매뉴얼_부서별 Kick manual_(VIP포함)_v2.0_20260923.pptx", "치과": "CS_BP/1. PDCA/3. CS매뉴얼/1. MOT매뉴얼/3. 치과계열/0. PDCA/치과계열_(P)결과,(D)계획_OO병원_CS_MOT매뉴얼_부서별 Kick manual_v1.0_20250616.pptx", "한방": "CS_BP/1. PDCA/3. CS매뉴얼/1. MOT매뉴얼/5. 한방계열/0. PDCA/세마병원.pptx (= 한방계열_…_부서별 Kick manual(의원)_v1.0_20260223.pptx 사본)", "안과": "CS_BP/1. PDCA/3. CS매뉴얼/1. MOT매뉴얼/6. 안과계열/0. PDCA/안과계열_(P)결과,(D)계획_OO병원_CS_MOT매뉴얼_부서별 Kick manual_v1.0_20251223.pptx", "이비인후과": "CS_BP/1. PDCA/3. CS매뉴얼/1. MOT매뉴얼/7. 이비인후과계열/0. PDCA/이비인후과계열_(P)결과_OO병원_CS_MOT매뉴얼_부서별 Kick manual_v1.0_20231122.pptx", "여성": "CS_BP/1. PDCA/3. CS매뉴얼/1. MOT매뉴얼/8. 여성계열/0. PDCA/여성계열_(P)결과,(D)계획_OO병원_CS_MOT매뉴얼_부서별 Kick manual(난임)_v2.0_20260218.pptx"}, "slogans": [{"text": "나의 가치를 높이는 **자연스러운 미소 장착**", "emoji": "😊", "source": ["공통", "치과"]}, {"text": "**사려 깊은 배려**, 따뜻한 말 한마디", "emoji": "🌿", "source": ["정형"]}, {"text": "**따뜻하게 공감하고, 쉽게 설명해드리는** 우리 병원", "emoji": "🩺", "source": ["정형"]}, {"text": "바쁘더라도 인사, 고객과 대화 시작과 끝에 **꼭 1초 눈맞춤**", "emoji": "✨", "source": ["미용"]}, {"text": "**전문성과 신뢰감**이 느껴지는 우리 병원", "emoji": "🩺", "source": ["공통", "치과"]}, {"text": "**고객을 기억하고 설명을 잘 해주는** 우리 한의원", "emoji": "🌿", "source": ["한방"]}, {"text": "환자 협조도 높이는 첫인상: **미소 인사 + 손 들어 보이기 + 1초 눈맞춤**", "emoji": "🙋", "source": ["안과"]}, {"text": "환자 방황하지 않도록: **1초 눈맞춤 + 정중한 제스처 + 다음 여정 안내**", "emoji": "💬", "source": ["안과"]}, {"text": "**미소로 먼저 다가가는** 우리 병원", "emoji": "😊", "source": ["이비인후과"]}, {"text": "**환자의 마음을 공감해주는** 따뜻한 여성의원", "emoji": "🌸", "source": ["여성"]}], "presets": [{"source": "공통", "team": "접수데스크팀", "slogan": 0, "ids": ["c01", "c02", "c03", "c04"]}, {"source": "공통", "team": "진료팀", "slogan": 0, "ids": ["c05", "c06", "c07", "c08"]}, {"source": "공통", "team": "의료진", "slogan": 4, "ids": ["c09", "c10", "c11", "c12", "c13"]}, {"source": "정형", "team": "외래팀 원무파트", "slogan": 1, "ids": ["o01", "o02", "o03", "o04"]}, {"source": "정형", "team": "외래팀 간호파트", "slogan": 1, "ids": ["o05", "o06", "o07", "o08"]}, {"source": "정형", "team": "영상의학팀", "slogan": 1, "ids": ["o09", "o10", "o11", "o12"]}, {"source": "정형", "team": "물리치료실", "slogan": 1, "ids": ["o13", "o14", "o15", "o16", "o17"]}, {"source": "정형", "team": "도수치료실", "slogan": 1, "ids": ["o13", "o18", "o19", "o15", "o21"]}, {"source": "미용", "team": "코디팀", "slogan": 3, "ids": ["b01", "b02", "b03", "b04", "b05", "b06"]}, {"source": "미용", "team": "코디팀(통역 동반)", "slogan": 3, "ids": ["b07", "b08", "b09"]}, {"source": "미용", "team": "간호팀", "slogan": 3, "ids": ["b10", "b11", "b12", "b13", "b14"]}, {"source": "미용", "team": "관리팀", "slogan": 3, "ids": ["b10", "b11", "b12", "b15", "b16", "b17", "b18"]}, {"source": "미용", "team": "D라운지(VIP)", "slogan": 3, "ids": ["b19", "b20", "b21", "b22"]}, {"source": "치과", "team": "코디팀", "slogan": 0, "ids": ["c01", "c02", "c03", "c04"]}, {"source": "치과", "team": "진료팀", "slogan": 0, "ids": ["c05", "c06", "c07", "d04", "c08"]}, {"source": "치과", "team": "의료진", "slogan": 4, "ids": ["c09", "c10", "c11", "c12", "c13"]}, {"source": "한방", "team": "고객지원팀", "slogan": 5, "ids": ["h01", "h02", "h03", "h04"]}, {"source": "한방", "team": "치료실", "slogan": 5, "ids": ["h05", "h06", "h07", "h08", "h09"]}, {"source": "한방", "team": "입원실", "slogan": 5, "ids": ["h10", "h11", "h12", "h13"]}, {"source": "한방", "team": "다이어트 센터", "slogan": 5, "ids": ["h14", "h01", "h15", "h16", "h04"]}, {"source": "안과", "team": "접수/수납 파트", "slogan": 6, "ids": ["e01", "e02", "e03", "e04", "e05"]}, {"source": "안과", "team": "외래진료 파트", "slogan": 6, "ids": ["e06", "e07", "e08"]}, {"source": "안과", "team": "검안 파트", "slogan": 6, "ids": ["e09", "e10", "e11", "e12"]}, {"source": "안과", "team": "수술 파트", "slogan": 6, "ids": ["e13", "e14", "e15", "e16", "e17"]}, {"source": "안과", "team": "IPL 파트", "slogan": 6, "ids": ["e18", "e19", "e20", "e17"]}, {"source": "이비인후과", "team": "접수데스크", "slogan": 8, "ids": ["n01", "n02", "n03"]}, {"source": "이비인후과", "team": "진료실", "slogan": 8, "ids": ["n04", "n05", "n06"]}, {"source": "이비인후과", "team": "수액실", "slogan": 8, "ids": ["n07", "n08", "n09"]}, {"source": "여성", "team": "접수데스크", "slogan": 9, "ids": ["w07", "w01", "w02", "w03", "w04", "w05", "w06"]}, {"source": "여성", "team": "진료 간호", "slogan": 9, "ids": ["w07", "w08", "w09", "w10", "w11", "w06"]}, {"source": "여성", "team": "상담실", "slogan": 9, "ids": ["w07", "w12", "w13", "w14", "w06"]}, {"source": "여성", "team": "주사실/검사실", "slogan": 9, "ids": ["w07", "w15", "w16", "w17", "w06"]}], "items": [{"id": "c01", "source": ["공통", "치과"], "dept": "접수데스크(코디)팀", "category": "맞이", "title": "고객 내원 시, **기립 및 환영하는 분위기로 맞이 인사**합니다.", "guide": "전화 통화 중 환자 내원 시: 눈 맞추고 고개 끄덕이며 대기 안내 양해 구하고, 통화 끝난 후 바로 접수 도움드리기", "script": ["안녕하세요^^ / 안녕하십니까^^", "[통화 중 내원 시] 기다려 주셔서 감사합니다. 접수 도와드리겠습니다."], "tip": ""}, {"id": "c02", "source": ["공통", "치과"], "dept": "접수데스크(코디)팀", "category": "대기", "title": "접수 시, 대기시간이 예상될 경우, **대기 안내 멘트**를 합니다.", "guide": "진료실 확인 후", "script": ["OOO님~ 죄송합니다만, 오늘 앞쪽에 진료가 조금 길어지고 있어서 대기 양해 부탁드립니다. 최대한 빠르게 안내해 드리겠습니다. 기다리시는 동안 (제스처 안내하며) 차/커피 이용 가능하십니다.^^"], "tip": ""}, {"id": "c03", "source": ["공통", "치과"], "dept": "접수데스크(코디)팀", "category": "대기", "title": "**장시간 대기고객** 중간에 확인하여 고객에게 **먼저 양해 멘트**를 합니다.", "guide": "", "script": ["OOO님, 많이 기다리셨죠? 앞에 힘든 치료하시는 분들이 계셔서 대기 시간이 길어지고 있는데요, OOO님은 0번 순으로 조금만 더 기다려 주시면 최대한 빨리 도와드리도록 하겠습니다. 기다리시게 해서 죄송합니다."], "tip": ""}, {"id": "c04", "source": ["공통", "치과"], "dept": "접수데스크(코디)팀", "category": "수납", "title": "**치료 끝난 고객을 알아봐 드리며 대기 안내**를 합니다.", "guide": "대기실 소파 제스처 안내", "script": ["수고 많으셨습니다~ / 고생 많으셨습니다~", "잠시 앉아 계시면 성함 불러드리겠습니다."], "tip": ""}, {"id": "c05", "source": ["공통", "치과"], "dept": "진료팀", "category": "사전 셋팅", "title": "환자 모시기 전 **차트(덴트웹 등) or 사진·진료에 필요한 도구를 미리 준비**합니다.", "guide": "", "script": [], "tip": "타 환자 정보, 특히 사진 노출에 주의합니다."}, {"id": "c06", "source": ["공통", "치과"], "dept": "진료팀", "category": "호명", "title": "환자 호명 후, **눈 맞추며 밝게 인사**합니다. 환자가 가까이 다가오면 **2~3보 거리 유지하여 '동행 안내'**합니다.", "guide": "", "script": ["(눈 맞추며) OOO님~ 안녕하세요~", "(가까이 다가왔을 때 오픈 제스처 하며) 진료실로 안내해 드리겠습니다."], "tip": "환자가 다가오기 전에 휙~ 돌아서서 서둘러 들어가면 서운해요 🙄"}, {"id": "c07", "source": ["공통", "치과"], "dept": "진료팀", "category": "치료", "title": "**액팅 전, 예고 멘트**를 합니다.", "guide": "", "script": ["의자 내려갑니다. / 의자 조금만 더 내리겠습니다.", "(체어 세우기 전) 의자 세워 드릴게요. 입 헹궈주세요~"], "tip": ""}, {"id": "d04", "source": ["치과"], "dept": "진료팀", "category": "치료", "title": "포 덮기 · 걷기 전에도 **예고 멘트**를 합니다.", "guide": "", "script": ["포 덮겠습니다. (2~3차 덮을 때에도)", "(치료 마무리 후, 라이트 치우며) 포 걷겠습니다."], "tip": ""}, {"id": "c08", "source": ["공통", "치과"], "dept": "진료팀", "category": "배웅", "title": "**진료실 입구까지 동행 배웅**하여, **다음 안내 멘트**합니다.", "guide": "대기실로 가는 가까운 출구 안내하며", "script": ["대기실에 잠시 앉아 계시면 수납 안내해 주실 거예요. 수고 많으셨습니다^^"], "tip": ""}, {"id": "c09", "source": ["공통", "치과"], "dept": "의료진", "category": "맞이 시", "title": "환자 옆에서 **눈을 맞추고 환자이름 부르며 인사**합니다.", "guide": "", "script": ["(눈 맞추며) OOO님~ 안녕하세요~^^", "오랜 만에 오셨네요~ / 오시는 길 괜찮으셨어요~", "소개로 오셨네요 감사합니다"], "tip": ""}, {"id": "c10", "source": ["공통", "치과"], "dept": "의료진", "category": "진료 시작 전", "title": "당일 치료 설명 후 **환자 CC 언급하며 확인**합니다.", "guide": "", "script": ["OO부위가 불편하시다고요~?", "제가 자세히 볼께요~ / 제가 불편하지 않도록 해결해 드릴게요"], "tip": ""}, {"id": "c11", "source": ["공통", "치과"], "dept": "의료진", "category": "진료 시작", "title": "고객이 느낄 통증에 대해 **행동 전 예고**합니다.", "guide": "진료 전후 / 높이·헤드 조정 전", "script": ["뒤로 편하게 기대보세요. 의자 넘어갑니다.", "00입니다. / 00 느낌 있습니다.", "[예] 바람입니다. / 눌리는 느낌 있습니다.", "높이 조정 좀 하겠습니다."], "tip": ""}, {"id": "c12", "source": ["공통", "치과"], "dept": "의료진", "category": "진료 중", "title": "**진행상황을 생중계**하며, **스탭과 대화에 주의**합니다.", "guide": "", "script": ["네, OO하고 있습니다. 잘 참으시네요~ / 좋습니다~", "네, OO만 하면 곧 끝납니다."], "tip": "환자 불안감 조성하는 멘트 지양 : 새거 없어요? 쓰읍! / 직원 오픈 피드백 NO"}, {"id": "c13", "source": ["공통", "치과"], "dept": "의료진", "category": "진료 후", "title": "**치료 결과 설명 / 다음 계획 안내**를 합니다.", "guide": "", "script": ["오늘 정~말 수고 많으셨어요. 힘드셨을텐데 잘 참으셔서 잘 마무리 되었습니다.", "OO치료/수술 잘 되었고, OO은 담당 선생님이 안내해 드리겠습니다."], "tip": ""}, {"id": "o01", "source": ["정형"], "dept": "외래팀 원무파트", "category": "접수", "title": "[초진] **믿고 내원한 환자를 알아봐 드립니다.** [재진] **지난 내원을 알아봐 드립니다.**", "guide": "", "script": ["[초진] OOO님~ 오늘 처음 내원해 주셨지요~ 잘 오셨습니다.", "[재진] OOO님~ 0달만에 오셨네요~ 잘 지내셨어요?"], "tip": ""}, {"id": "o02", "source": ["정형"], "dept": "외래팀 원무파트", "category": "접수 문진", "title": "**환자 치료 히스토리 언급, 기저질환 확인 시 기립하여 주변 환자에게 크게 노출되지 않도록** 주의합니다.", "guide": "", "script": ["OOO님~ 문진표 잘 작성해 주셨는데요~ 원장님께서 진료 전으로 참고하실 수 있도록 제가 몇가지 여쭈어도 괜찮으실까요?"], "tip": ""}, {"id": "o03", "source": ["정형"], "dept": "외래팀 원무파트", "category": "수납 예약", "title": "**당일 진행 사항 재확인 후 수납 안내**합니다. 환자 편의 고려하여 **다음 예약 시간 제안**합니다.", "guide": "", "script": ["원장님께서 일주일 뒤에 뵙자고 하셨어요~ 다음 주 0요일 오늘과 같은 시간으로 0시 괜찮으실까요?"], "tip": ""}, {"id": "o04", "source": ["정형"], "dept": "외래팀 원무파트", "category": "다음 안내", "title": "**다음 여정을 상세 안내**합니다.", "guide": "에스컬레이터 or 엘리베이터 이용해서", "script": ["물리치료실 1번으로 가시면 됩니다. (사진 보여드리며) 파란바탕 1번 치료실입니다~"], "tip": ""}, {"id": "o05", "source": ["정형"], "dept": "외래팀 간호파트", "category": "진료실 안내", "title": "**환자 호명 시 눈 맞추며 인사 후 착석 안내**합니다.", "guide": "", "script": ["OOO님~ 안녕하세요.^^ 진료실로 들어오세요. 안쪽 흰색 의자에 앉으시면 됩니다~"], "tip": "눈 맞춤 없는 인사는 '인사의 긍정 효과'를 떨어뜨려요.. 🥲"}, {"id": "o06", "source": ["정형"], "dept": "외래팀 간호파트", "category": "대기 관리", "title": "앞선 진료 대기 환자가 n명인 경우 **대기 양해** 구합니다.", "guide": "", "script": ["OOO님~ 원장님께서 진료 꼼꼼히 봐주시느라 앞 진료가 길어지고 있습니다. 기다리시는 동안 차 한 잔 하시겠어요? 뒤쪽 음용대 이용 부탁 드립니다~"], "tip": ""}, {"id": "o07", "source": ["정형"], "dept": "외래팀 간호파트", "category": "설명", "title": "**진료 후 이해하기 쉽게 설명**합니다.", "guide": "타환자에게 정보 노출 주의", "script": ["원장님께서 오늘 OO증상의 원인으로 보이는 OO에 대한 주사를 처방해 주셨어요. OO주사는 ~ (+상세 설명)"], "tip": ""}, {"id": "o08", "source": ["정형"], "dept": "외래팀 간호파트", "category": "다음 안내", "title": "**상세 다음안내** 합니다.", "guide": "정중한 손짓으로 방향 안내", "script": ["데스크 앞쪽 의자에 앉아 계시면 수납 안내해드리겠습니다. 다음 예약 때 뵙겠습니다."], "tip": ""}, {"id": "o09", "source": ["정형"], "dept": "영상의학팀", "category": "촬영실 안내", "title": "**환자 호명 후 눈 맞추며 인사**합니다. **환자명 확인 후 촬영실 안내**합니다.", "guide": "", "script": ["OOO님~ 안녕하세요.^^ OOO님 맞으시죠? 촬영 안내 해드리겠습니다."], "tip": "눈 맞춤 없는 인사는 '인사의 긍정 효과'를 떨어뜨려요.. 🥲"}, {"id": "o10", "source": ["정형"], "dept": "영상의학팀", "category": "촬영 전", "title": "**촬영 부위 확인 후 정중한 어투로 자세 설명**합니다.", "guide": "", "script": ["오늘 (방향+부위) 촬영하겠습니다. 이쪽에 앉으시고요, 두 발을 이쪽에 발바닥이 붙게 무릎 세워 보시겠어요? 네~ 맞습니다. 잠시 그대로 계세요~ 네 좋습니다~"], "tip": ""}, {"id": "o11", "source": ["정형"], "dept": "영상의학팀", "category": "촬영 중", "title": "**촬영 자세 정정 필요 시 터치 전 예고**합니다.", "guide": "", "script": ["자세 제가 잠시 잡아 드리겠습니다."], "tip": ""}, {"id": "o12", "source": ["정형"], "dept": "영상의학팀", "category": "다음 안내", "title": "**수고 멘트하며 다음안내** 합니다.", "guide": "정중한 손짓으로 방향 안내", "script": ["앞쪽 소파에 앉아 계시면 성함 불러 주실 거예요~ 수고 많으셨습니다."], "tip": ""}, {"id": "o13", "source": ["정형"], "dept": "물리치료실·도수치료실", "category": "공통", "title": "환자의 편의를 고려하여 **베드 밑 신발을 정리**해드립니다.", "guide": "작은 배려는 환자에게 온기로 전해져 감사 인사로 돌아옵니다.", "script": [], "tip": ""}, {"id": "o14", "source": ["정형"], "dept": "물리치료실", "category": "치료 전", "title": "환자 치료 준비 시 **치료명 + 치료효과 + 소요시간** 안내합니다.", "guide": "먼저 소요시간 물어보시는 경우, 나가보셔야 하는 시간 확인", "script": ["OOO님, 00부위에 00치료 받으실텐데요, 00에 도움되는 치료이고요~ 약 00분 소요됩니다. 오늘 치료는 대략 총 00분 정도 소요됩니다.", "[소요시간 문의 시] 총 00분 정도 진행됩니다만, 혹시 나가보셔야 하는 시간 있으신가요~?"], "tip": ""}, {"id": "o15", "source": ["정형"], "dept": "물리치료실·도수치료실", "category": "치료 중", "title": "환자가 놀라지 않도록 **커튼 열기 전 / 몸 터치 전 예고멘트** 합니다.", "guide": "", "script": ["00번 들어가겠습니다. / 허리쪽 가볍게 눌러 보겠습니다~"], "tip": "급한 마음에 예고없이 커튼을 확~ 걷지 않습니다. 😮"}, {"id": "o16", "source": ["정형"], "dept": "물리치료실", "category": "치료 중", "title": "베드를 떠나기 전 **환자의 안전과 편의를 고려하여 벨 안내**를 합니다.", "guide": "", "script": ["00쪽에 벨 있어요~ 불편하시면 벨 눌러주세요~"], "tip": ""}, {"id": "o17", "source": ["정형"], "dept": "물리치료실", "category": "배웅", "title": "환자와 눈 맞춤 하며 **수고 멘트로 기분 좋은 인사**를 전합니다.", "guide": "환자 퇴장 전 미리 차트 확인 후 주차권 필요여부를 확인합니다.", "script": ["수고 많으셨습니다. 조심해서 들어가세요^^"], "tip": ""}, {"id": "o18", "source": ["정형"], "dept": "도수치료실", "category": "치료실 안내", "title": "환자가 입장하면 **환자명 알아봐 드리며 눈 맞추며 인사**합니다.", "guide": "", "script": ["안녕하세요~ OOO님~", "잠시만 앉아서 기다려 주시면 안내해 드리겠습니다.", "탈의실에서 환복 하시고 나오시면 치료 안내해 드리겠습니다."], "tip": ""}, {"id": "o19", "source": ["정형"], "dept": "도수치료실", "category": "치료 전/중", "title": "지난 **치료 후 만족도/불편 여부 확인**합니다. 호전된 모습을 보이는 경우 **자가 관리 노력을 알아봐** 드립니다.", "guide": "", "script": ["지난 번 치료 후에 좀 어떠셨어요?", "OO 가동범위가 더 늘어나셨어요. 자가 관리도 잘 해주셨나 봅니다."], "tip": ""}, {"id": "o21", "source": ["정형"], "dept": "도수치료실", "category": "배웅", "title": "**수고멘트 하며 다음안내** 합니다.", "guide": "", "script": ["수고 많으셨습니다. 오늘 치료 잘 끝났습니다. 오늘 물리치료 있으시죠~ 나가셔서 오른쪽 방향으로 쭉 가시면 1번 or 2번 물리치료실 입니다. 물리치료 잘 받으시고, 다음 예약일에 뵙겠습니다."], "tip": ""}, {"id": "b01", "source": ["미용"], "dept": "코디팀", "category": "접수", "title": "고객 맞이 시, **밝은 표정으로 눈 맞춤하며 응대**합니다.", "guide": "밝은 응대: 환자들도 자연스럽게 부드럽게 반응하여 불필요한 갈등이나 컴플레인 ↓ / 무뚝뚝하거나 차가운 응대: 고객이 예민하게 반응해 작은 일도 크게 번질 가능성 ↑", "script": ["안녕하세요오~ / 성함이 어떻게 되세요~?", "오늘 어떤 진료 보러 오셨어요~?"], "tip": ""}, {"id": "b02", "source": ["미용"], "dept": "코디팀", "category": "안내", "title": "접수 후, **제스처를 활용해 상세한 다음 안내**를 합니다.", "guide": "", "script": ["❌ 네~ 접수 됐어요.", "⭕ 네~ 접수 도와드렸습니다. 잠시만 앉아서 기다려 주시면 성함 불러드리겠습니다.^^"], "tip": ""}, {"id": "b03", "source": ["미용"], "dept": "코디팀", "category": "안내", "title": "**소개 고객의 경우, 알아보기 멘트를 언급**합니다.", "guide": "", "script": ["[초진(소개 고객)] 네~ 소개로 오셨네요. 감사합니다. / 잘 오셨습니다~", "[재진] 네~ OO님, O시에 OO시술 예약해 주셨네요~ 지난번 시술은 괜찮으셨나요?"], "tip": ""}, {"id": "b04", "source": ["미용"], "dept": "코디팀", "category": "피부진단기/사진촬영", "title": "사진 촬영 시, **성의 있는 터치 및 촬영 이유**를 설명합니다.", "guide": "", "script": ["정확한 상담을 위해 / 시술 전 (피부진단기 촬영 외에) 사진촬영 도와드리겠습니다."], "tip": ""}, {"id": "b05", "source": ["미용"], "dept": "코디팀", "category": "수납", "title": "수납 전, 당일 환자 **특이사항에 대한 챙김, 공감멘트**를 언급합니다.", "guide": "가볍게 고개 끄덕이며 눈 맞춤하며", "script": ["OOO님~ 수고 많으셨습니다 / 시술, 관리 잘 받으셨어요~?", "(수술) 오늘 많이 힘드셨죠~"], "tip": ""}, {"id": "b06", "source": ["미용"], "dept": "코디팀", "category": "수납", "title": "수납 시 **진료 내역**을 언급합니다.", "guide": "진료비 결제 내용은 볼륨을 낮춰 말하기", "script": ["네 OOO님, 오늘 OO시술 결정하셨고요~ OOO진료는 (+보험적용 여부 설명) OOO 하셔서 OOO원입니다."], "tip": ""}, {"id": "b07", "source": ["미용"], "dept": "코디팀(통역 동반)", "category": "안내", "title": "설명을 할 때, **고객을 바라보며 안내**합니다.", "guide": "[시선 분배 예시] 고객 70 : 통역사 30 — 의료 서비스 제공자의 주체는 우리이며, 통역사는 말의 의미를 전해주는 교량 역할을 합니다.", "script": [], "tip": ""}, {"id": "b08", "source": ["미용"], "dept": "코디팀(통역 동반)", "category": "안내 전달", "title": "정확한 통역을 위해, **문장을 중간중간 끊어서 통역사에게 시선을 맞추어 통역 신호**를 전달합니다.", "guide": "", "script": [], "tip": ""}, {"id": "b09", "source": ["미용"], "dept": "코디팀(통역 동반)", "category": "관리 마무리", "title": "통역 중에는 **고객의 표정을 살피며 이해했는지** 확인합니다.", "guide": "", "script": [], "tip": "📍 예고 멘트가 통역되지 않은 상태에서 액팅을 하지 않습니다. 통역사가 예고를 생략하는 경우 재 요청합니다."}, {"id": "b10", "source": ["미용"], "dept": "간호팀·관리팀", "category": "동행 안내", "title": "고객과 동행시, **2~3보 거리를 유지한 상태로 동행 안내**합니다.", "guide": "호명 + 인사 후, 고객이 일어날 때까지 기다렸다가 함께 이동합니다.", "script": ["OOO님~ 안녕하세요. 진료실 / 시술실 안내 해 드리겠습니다."], "tip": ""}, {"id": "b11", "source": ["미용"], "dept": "간호팀·관리팀", "category": "사진촬영", "title": "사진 촬영 시, **촬영 이유에 대해 사전안내** 합니다.", "guide": "", "script": ["오늘 상담에 활용하고자 / 경과 확인 차 촬영 진행하겠습니다."], "tip": ""}, {"id": "b12", "source": ["미용"], "dept": "간호팀·관리팀", "category": "사진촬영", "title": "촬영 후, **수고 멘트 및 상세 다음 안내**를 합니다.", "guide": "", "script": ["사진촬영 잘 끝났습니다~ 대기실에 앉아 계시면 상담 안내해 드리겠습니다."], "tip": ""}, {"id": "b13", "source": ["미용"], "dept": "간호팀", "category": "베드 안내", "title": "원장님 대기 필요 시, **대기 안내 멘트**를 언급합니다.", "guide": "", "script": ["원장님 곧 오시겠습니다.", "[대기 길어질 경우 상황 확인 후] 지금 원장님께서 앞 시술이 길어져서~ 곧 끝나시는 대로 바로 오시겠습니다. 잠시만 기다려 주십시오~"], "tip": ""}, {"id": "b14", "source": ["미용"], "dept": "간호팀", "category": "시술", "title": "**액팅 전, 예고 멘트**를 언급합니다.", "guide": "체어 눕힐 때/세울 때, 통증 예고 드릴 때, 담요 덮을 때/걷을 때", "script": ["체어 넘어갑니다 / 세워 드릴게요", "차갑습니다. 따끔합니다.", "담요 덮어 드리겠습니다."], "tip": ""}, {"id": "b15", "source": ["미용"], "dept": "관리팀", "category": "관리 중", "title": "**기본안내 멘트를 완전한 문장**으로 언급합니다.", "guide": "", "script": ["❌ 마취 할게요", "⭕ 마취크림 발라드리겠습니다."], "tip": ""}, {"id": "b16", "source": ["미용"], "dept": "관리팀", "category": "관리 중", "title": "**예고 멘트 후 여유 있게 행동 & 상세하게 안내**합니다.", "guide": "고객 옆에서 예고 멘트 후 이동하기", "script": ["(노크 후) 들어가겠습니다~", "❌ 잠시만요~ / 잠시만 기다려 주세요.", "⭕ 팩 준비하겠습니다. / 기기 준비하겠습니다."], "tip": ""}, {"id": "b17", "source": ["미용"], "dept": "관리팀", "category": "관리 중", "title": "고객의 질문에 대한 답변, 스몰토크 시 **프라이빗한 환경 조성을 위해 조용한 목소리로 부드럽게 대화**합니다.", "guide": "끝말을 의도적으로 천천히 길고 부드럽게 장음 처리 \"요오~\" \"다아~\"", "script": ["네에~ 오늘 OO시술 하실건데요오~"], "tip": ""}, {"id": "b18", "source": ["미용"], "dept": "관리팀", "category": "배웅", "title": "정해진 배웅 지점까지 배웅 안내 후, **수고 멘트 언급**합니다.", "guide": "", "script": ["수고 많으셨습니다~"], "tip": ""}, {"id": "b19", "source": ["미용"], "dept": "D라운지(VIP)", "category": "동행 안내", "title": "고객과 동행시, 이동하며 **가볍게 안부인사, 알아보기 멘트**합니다.", "guide": "", "script": ["잘 지내셨어요~ / 오시는 길 괜찮으셨나요~", "지난번 다녀오신 여행은 어떠셨나요~?"], "tip": ""}, {"id": "b20", "source": ["미용"], "dept": "D라운지(VIP)", "category": "관리 중", "title": "고객 문의에 답변 시, **공감 & 정확한 정보**를 전달하며 나의 개인적인 **추측으로 말하지 않습니다.**", "guide": "", "script": ["[시술 효과 없음 → 공감+다른 고객 만족 사례] 아 네~ 그러셨어요. 만족도가 고객님들마다 다르신 거 같아요. 효과 만족하셔서 꾸준히 맞으시는 분들도 많으세요~", "[시술 후 멍 → 공감+정확한 정보 전달] 아 네.. 눈물까지 나셨다니, 통증이 크셨던 것 같아요.. 다음에는 최대한 덜 아프게 받으실 수 있도록 간호팀에게 전달해 놓겠습니다. 말씀 잘 주셨어요", "[타 부서 업무처리 → 공감+확인 의지 표현] 아 네~ 그 부분은 저희도 확인해 보고 말씀드리겠습니다."], "tip": ""}, {"id": "b21", "source": ["미용"], "dept": "D라운지(VIP)", "category": "관리 마무리", "title": "VIP 감사 의미를 담아 **적극적으로 수고 감사 멘트**합니다.", "guide": "", "script": ["오늘 관리는 괜찮으셨을까요~?", "네에~ 오늘도 수고 많으셨습니다^^"], "tip": ""}, {"id": "b22", "source": ["미용"], "dept": "D라운지(VIP)", "category": "배웅", "title": "말투뿐만 아니라, **표정에서 감정이 전달**될 수 있도록 관리합니다.", "guide": "고객의 인사 각도나 깊이에 맞춰 직원도 미러링하여 인사하기", "script": [], "tip": ""}, {"id": "h01", "source": ["한방"], "dept": "고객지원팀·다이어트 센터", "category": "맞이", "title": "환자를 알아보며 **반갑게 맞이 인사**합니다.", "guide": "", "script": ["[얼굴 아는 환자] OOO님~ 안녕하세요~ / 오셨어요~", "[얼굴 모르는 환자] 안녕하세요^^ 성함이 어떻게 되세요? (확인 후) 아~ O시에 예약하셨죠~?", "[먼저 예약 시간을 말하는 환자] 네~ 안녕하세요. O시 예약이시구요~ 성함이 어떻게 되세요?"], "tip": ""}, {"id": "h02", "source": ["한방"], "dept": "고객지원팀", "category": "문의", "title": "환자 문의 시, **환자 눈을 맞추며 도움 의지**를 보입니다.", "guide": "", "script": ["네~ OOO님, (문의사항) 말씀이시죠~ 제가 확인해보고 바로 안내해 드릴게요. 잠시만 기다려 주세요~"], "tip": "눈맞춤 없이 무표정한 응대는 환자에게 부정적 메시지로 전달될 수 있습니다."}, {"id": "h03", "source": ["한방"], "dept": "고객지원팀", "category": "동행 안내", "title": "추나 치료실/진료실 이동 시 **오픈 제스처로 동행 안내**합니다.", "guide": "", "script": ["[진료실 안내] OOO님~ 진료실로 모시겠습니다 / 안내해 드리겠습니다 / 들어가시겠습니다.", "[피소개자 인계 시] OOO님이십니다. (소개자명)님 소개로 오셨어요. 잘 부탁드립니다.", "[추나 치료실 안내] OOO님~ 추나 치료 안내해 드리겠습니다~ 소지품은 하얀색 바구니에 두시고 (추나 시트지 가리키며) 이쪽에 얼굴 두시고 엎드려 계시면 원장님께서 바로 추나 치료 도와드리겠습니다."], "tip": ""}, {"id": "h04", "source": ["한방"], "dept": "고객지원팀·다이어트 센터", "category": "예약", "title": "예약 시, **도움 의지**를 보입니다.", "guide": "", "script": ["❌ 그 날은 예약이 다 찼어요. / 그 날은 안돼요. / 다른 날은 안되세요?", "[제안한 요일 외 다른 날을 원할 경우] 요즘 소개로 내원하시는 분들이 워낙 많으셔서 O일은 대기가 길어질 것으로 예상되는데요, 혹시 O일은 어떠세요? 이 날 오시면 더 신경 써서 봐 드릴 수 있을 것 같아서요~", "[그날밖에 안 된다고 할 경우] 20분 정도 대기 하실 수 있는데 환자분들 진료/치료 시간에 따라 대기 시간이 달라질 수 있습니다~ 양해 부탁드립니다. 저희도 너무 늦지 않게 진료 안내해 드리겠습니다."], "tip": ""}, {"id": "h05", "source": ["한방"], "dept": "치료실", "category": "맞이", "title": "환자 호명 및 인사 후, **2~3보 거리 유지하며 동행 안내**합니다.", "guide": "", "script": ["OOO님~ 안녕하세요. 치료실 안내해 드리겠습니다. / 모시겠습니다.", "(치료실로 이동하며) 오늘 (치료 부위) 치료 맞으시죠~?", "침대로 이동해서 바로 준비해 드리겠습니다.", "[거동이 불편한 환자] (천천히 함께 이동하며) 오늘 오시는 길 괜찮으셨어요~? / 오늘 컨디션은 좀 어떠세요~?"], "tip": "거동이 불편한 환자보다 내가 먼저 앞서 가서 기다리면 환자의 마음은 급해집니다."}, {"id": "h06", "source": ["한방"], "dept": "치료실", "category": "치료", "title": "**액팅 전, 예고 멘트**를 합니다.", "guide": "", "script": ["(ICT 부착 전, 초음파 젤 바르기 전, 아이스팩 올리기 전) 차갑습니다~", "(핫팩 올리기 전) 핫팩 올려드릴게요~ 뜨거우면 말씀해 주세요.", "(커튼 열기 전) OOO님~ 들어가겠습니다."], "tip": ""}, {"id": "h07", "source": ["한방"], "dept": "치료실", "category": "치료 마무리", "title": "침 치료 환자는 **발침 확인 멘트**를 합니다.", "guide": "", "script": ["침 확인 한번 하겠습니다.", "(손으로 훑으며 확인) 제가 확인 했을 때는 침을 다 뺀 것으로 보이네요. 혹시 모르니 (옷 갈아입고) 나오실 때 남아있는 침 없는지 확인 한번 부탁드립니다."], "tip": ""}, {"id": "h08", "source": ["한방"], "dept": "치료실", "category": "치료 마무리", "title": "**다음 치료 계획에 대해 설명** 후, 치료 종료를 안내합니다.", "guide": "", "script": ["네 천천히 일어나시고~ (고객과 눈맞춤하며) 원장님께서... (+치료 계획 안내)"], "tip": ""}, {"id": "h09", "source": ["한방"], "dept": "치료실", "category": "배웅", "title": "**눈 맞추며 밝게 인사**합니다.", "guide": "", "script": ["(치료 계획 안내 후) 치료 다 끝나셨습니다. (제스처로 나가는 방향 가리키며) 이쪽으로 나가셔서 데스크에 성함 말씀해 주세요~ 조심히 가세요^^"], "tip": ""}, {"id": "h10", "source": ["한방"], "dept": "입원실", "category": "맞이", "title": "**밝은 인사와 미소로 눈맞춤 및 정중한 손짓**으로 안내합니다.", "guide": "", "script": ["OOO님, 안녕하세요^^", "입원실로 안내해 드리겠습니다. (오픈 제스처 하며) 이쪽으로 오십시오"], "tip": ""}, {"id": "h11", "source": ["한방"], "dept": "입원실", "category": "라운딩", "title": "**입원실 문 열기 전, 예고멘트** 및 **스몰 토크**를 합니다.", "guide": "", "script": ["[아침] (노크 후) OOO님, 잠시 들어가겠습니다~", "안녕하세요~ 좋은 아침입니다. 밤새 편히 주무셨어요~? 어제는 OO가 불편하다고 하셨는데 지금은 좀 어떠신가요~?", "[저녁] (노크 후) OOO님 저녁 라운딩 왔습니다~ 오늘 하루 어떠셨나요? 아침보다 컨디션이 좀 나아지셨을까요? 낮 동안 많이 힘드시진 않으셨어요?"], "tip": ""}, {"id": "h12", "source": ["한방"], "dept": "입원실", "category": "식사 안내", "title": "단순 배식이 아닌 **'챙김'이 전달되도록 응대**합니다.", "guide": "", "script": ["❌ OOO님, 식사 드릴게요~", "⭕ OOO님~ 아침/점심/저녁식사입니다. 맛있게 드시고 불편한 점이 있으시면 말씀해 주세요.", "⭕ OOO님~ 식사 챙겨드릴게요. 식사는 입에 좀 맞으세요?"], "tip": ""}, {"id": "h13", "source": ["한방"], "dept": "입원실", "category": "퇴원", "title": "**축하드리는 마음으로 밝은 미소 응대**합니다.", "guide": "", "script": ["퇴원 축하 드립니다~ 그 동안 치료 받으시느라 수고 많으셨습니다. 퇴원 후에도 치료를 계속 받아야 후유증 없이 회복할 수 있으니 통원 치료도 꾸준히 받으시는게 중요합니다. 다음에 또 뵙겠습니다. 조심히 가세요~"], "tip": ""}, {"id": "h14", "source": ["한방"], "dept": "다이어트 센터", "category": "맞이", "title": "데스크에서 **모니터 옆으로 고개 내밀어 눈맞춤하며** 인사합니다.", "guide": "밝은 인사와 미소로 눈맞춤 및 정중한 손짓으로 안내", "script": [], "tip": "모니터 위로 빼꼼 보며 인사하거나, 모니터만 보며 인사하지 않습니다."}, {"id": "h15", "source": ["한방"], "dept": "다이어트 센터", "category": "검사 안내", "title": "다음이 궁금하지 않도록 **사전 안내 및 예고멘트**를 합니다.", "guide": "인바디 검사 중 잠깐 자리를 비웠다면 끝날 때 가서 챙겨드리기", "script": ["[간기능 검사] 다이어트 하시는 분들은 지방간이 있을 수 있어서 간수치를 미리 확인하고 있습니다.", "두번째 검지 소독 후, 피 조금 빼겠습니다. 조금 따끔 하실 거예요~", "[인바디 · 자리 비울 때] (인바디 기계 세팅해 드린 후) '측정이 완료되었습니다.' 멘트 나오면 내려오셔서 양말이랑 신발 신으시고 대기실에 앉아 계시면 됩니다."], "tip": ""}, {"id": "h16", "source": ["한방"], "dept": "다이어트 센터", "category": "동행 안내", "title": "원장님 진료실 안내 시, **진료실 앞까지 동행 및 정중한 손짓**으로 안내합니다.", "guide": "", "script": ["❌ (데스크에서 손짓하며) OOO님, 원장님 상담 들어가실게요~", "⭕ (데스크 앞에 서서) OOO님~ (손바닥 제스처로 진료실 방향 가리키며) 원장님 상담 안내해 드리겠습니다."], "tip": ""}, {"id": "e01", "source": ["안과"], "dept": "접수/수납 파트", "category": "맞이", "title": "원내에서 환자가 두리번 거리면 **밝은 목소리로 인사 후 눈 맞추며 도움 필요 여부 확인**합니다.", "guide": "", "script": ["안녕하십니까~ / 도움 필요하실까요? / 혹시 접수하셨을까요?", "[재진] (손바닥 제스처하며) 000으로 접수 부탁드립니다.", "[신환] 오늘 처음 오셨을까요? (손 들어 보이며) 이쪽에서 접수 도와드리겠습니다."], "tip": "모니터만 응시한 채로 목소리로만 인사하지 않습니다."}, {"id": "e02", "source": ["안과"], "dept": "접수/수납 파트", "category": "접수", "title": "**정중한 어투로 문진표 작성 안내 또는 상세 다음 안내**합니다.", "guide": "환자 다음 동선에 따라 진료 / 검사 대기 zone 구분하여 대기석 방향 안내", "script": ["[초진] 편하신 곳 앉으셔서 표기해드린 곳 작성 부탁드립니다. 작성하신 후에 데스크로 와 주시면 접수 도와드리겠습니다.", "[접수 후] 000님~ 접수 되셨습니다. OO실 앞 대기석에 앉아 계시면 00 안내해드리겠습니다."], "tip": ""}, {"id": "e03", "source": ["안과"], "dept": "접수/수납 파트", "category": "접수 대기", "title": "대기환자 N분 이상인 경우 **사전 대기 양해** 구합니다.", "guide": "", "script": ["⭕ 앞에 진료/검사 O분 계셔서, 00분 이상 대기 예상됩니다. 양해 부탁드립니다.", "❌ 00분 이상 기다리셔야 하세요."], "tip": "통보식 어투를 사용하지 않습니다."}, {"id": "e04", "source": ["안과"], "dept": "접수/수납 파트", "category": "수납", "title": "수납 시, 검사/치료로 수고한 환자에게 **챙김 멘트**를 합니다.", "guide": "", "script": ["오늘 진료 잘 보셨어요~? / 검사/수술 받으시느라 수고 많으셨습니다.", "혹시 필요하신 서류 있으세요~? / 주차 하셨을까요~?"], "tip": ""}, {"id": "e05", "source": ["안과"], "dept": "접수/수납 파트", "category": "배웅", "title": "환자와 **눈 맞춤**하며 **밝은 목소리로 배웅 인사**를 합니다.", "guide": "", "script": ["안녕히 가세요~ / 조심히 가세요~"], "tip": ""}, {"id": "e06", "source": ["안과"], "dept": "외래진료 파트", "category": "맞이", "title": "**손을 들어 보이며 환자 호명 후, 밝은 표정으로 눈맞춤하며 인사 + 정중한 제스처**로 착석 안내합니다.", "guide": "", "script": ["OOO님~ 안녕하세요^^ OOO님 맞으시죠~ 진료실로 안내해드리겠습니다. 안쪽 의자에 앉으시면 됩니다."], "tip": ""}, {"id": "e07", "source": ["안과"], "dept": "외래진료 파트", "category": "안약 투여", "title": "**눈 높이를 맞춰** 안약 투여 이유와 함께 **예고멘트** 합니다.", "guide": "", "script": ["OO님~ 증상 완화될 수 있게 항생제 안약 좀 넣어드리겠습니다. 눈 떠보시고, 위쪽 한 번 봐주시겠어요~?", "OO님 오늘 OO검사/수술 전으로 OO안약 넣어드리겠습니다.", "안약을 넣으면 OO한 느낌이 드실 수 있는데 정상적 반응이니 놀라지 마시고요, 제가 0분 텀으로 확인해드리겠습니다."], "tip": ""}, {"id": "e08", "source": ["안과"], "dept": "외래진료 파트", "category": "진료 후", "title": "**당일 진료 내용** 및 환자의 **다음 여정 상세 안내**합니다.", "guide": "환자 다음 동선에 따라 진료 / 검사 대기 zone 구분하여 대기석 방향 안내", "script": ["오늘 원장님께서 OO해보자고 하셨어요~ 혹시 추가로 궁금하신 점 있으실까요?", "OO실 앞 대기석에 잠시 앉아 계시면 OO 안내해드리겠습니다."], "tip": ""}, {"id": "e09", "source": ["안과"], "dept": "검안 파트", "category": "맞이", "title": "**손을 들어 보이며 환자 호명 후, 눈맞춤하며 인사 + 정중한 제스처**로 검사 자리를 안내합니다.", "guide": "", "script": ["OOO님~ 안녕하세요^^ OOO님 맞으시죠~ 앞쪽 두번째 의자에 앉아 주시면 검사 도와드리겠습니다."], "tip": "눈 맞춤 없는 응대는 지시적이고 사무적으로 비춰져 환자 예민도를 높일 수 있습니다."}, {"id": "e10", "source": ["안과"], "dept": "검안 파트", "category": "검사 준비", "title": "검사 목적과 검사명 소개 후, **터치 전 반드시 예고**합니다.", "guide": "검사 특이사항(긴 시간, 머리 각도 조정 등)이 있으면 미리 안내", "script": ["오늘 OO수술 있으셔서 OO측정을 위한 OO검사 하겠습니다.", "의자 높낮이 괜찮으실까요? 검사기 높이 조정하겠습니다.", "각도 조정 위해서 머리 잠깐 잡아드릴게요~ / 눈꺼풀쪽 제가 살짝 잡아드리겠습니다~", "이 검사 기기 특성상 머리를 뒤에서 살짝 밀면서 찍을거라 혹시 불편하시면 말씀해주세요~"], "tip": ""}, {"id": "e11", "source": ["안과"], "dept": "검안 파트", "category": "검사 중", "title": "환자의 협조도를 높이는 **응원/칭찬/수고 멘트**를 합니다.", "guide": "", "script": ["지금 좋습니다~ 조금만 참아보실까요? 네, 좋습니다~", "눈 한 번 깜~빡 해보실까요? 네, 한 번 더 깜~빡 해보시고요, 네~ 너무 잘해주셨어요!", "오른쪽 검사 잘 되었고요, 반대쪽 가보겠습니다~", "오늘 도와주셔서 검사 잘 진행되었습니다. 수고 많으셨어요~!"], "tip": ""}, {"id": "e12", "source": ["안과"], "dept": "검안 파트", "category": "다음 안내", "title": "검사 완료 후 다음이 궁금하지 않도록 **상세한 다음 안내**를 합니다.", "guide": "환자 다음 동선에 따라 진료 / 검사 대기 zone 구분하여 대기석 방향 안내", "script": ["오늘 검사는 잘 끝나셔서 (손바닥 제스처로 방향 가리키며) 진료실 앞쪽 대기실에 앉아 계시면 OO안내해 드리겠습니다."], "tip": ""}, {"id": "e13", "source": ["안과"], "dept": "수술 파트", "category": "맞이", "title": "**호명 시 손 들어 보이기**로 적극 제스처를 활용해 수술실로 안내합니다.", "guide": "", "script": ["OOO님~ (손들어 보이며) 안녕하세요^^ (손바닥 제스처 사용하여) 수술실로 안내해드리겠습니다."], "tip": ""}, {"id": "e14", "source": ["안과"], "dept": "수술 파트", "category": "수술 준비", "title": "안약 넣은 환자 배려하여 수술실로 **속도 맞춰 동행안내**합니다.", "guide": "", "script": ["수술실로 안내해드리겠습니다. 제 팔 잡아보시겠어요~? 천천히 함께 이동하겠습니다."], "tip": ""}, {"id": "e15", "source": ["안과"], "dept": "수술 파트", "category": "수술 준비", "title": "진행 과정을 간단히 **설명 후 안심멘트**합니다.", "guide": "", "script": ["00은 00이유로 진행됩니다. 오늘 수술 전으로 수술할 때 과정 잠시 설명드리겠습니다.", "00 확인해드리겠습니다. 괜찮으실까요? 00이유로 한번 더 안약 넣어드리겠습니다.", "수술 잘 끝나실테니, 너무 긴장하지 않으셔도 됩니다~"], "tip": ""}, {"id": "e16", "source": ["안과"], "dept": "수술 파트", "category": "수술 마무리", "title": "수술 종료 후 안심할 수 있도록 **안심멘트 및 수고 멘트**를 합니다.", "guide": "", "script": ["수술 잘 끝났습니다. 수고 많으셨어요~~", "천천히 일어나보시고요, OO실로 안내 해 드리겠습니다."], "tip": ""}, {"id": "e17", "source": ["안과"], "dept": "수술·IPL 파트", "category": "다음 안내", "title": "다음이 궁금하지 않도록 **상세한 다음 안내**를 합니다.", "guide": "", "script": ["(손바닥 제스처로 대기 공간 안내하며) OO에 앉아 계시면 OO안내해 드리겠습니다.", "[귀가 시] 오늘 진료 다 보셔서 귀가하셔도 됩니다. 조심히 들어가세요~"], "tip": ""}, {"id": "e18", "source": ["안과"], "dept": "IPL 파트", "category": "맞이", "title": "손을 들어 보이며 호명 후 **눈맞춤 인사 + 정중한 제스처**로 관리실을 안내합니다.", "guide": "", "script": ["OOO님~ (손 들어 보이며) 안녕하세요^^ (손바닥 제스처 사용하며) 관리실로 안내해드리겠습니다.", "(손바닥 제스처, 이불 한쪽 걷어드리며) 이쪽 침대에 천천히 누워보시겠어요?"], "tip": "다른 대기 환자에게 치료명이 노출되지 않도록 합니다. (예: \"건조증 치료 하실게요\" ❌)"}, {"id": "e19", "source": ["안과"], "dept": "IPL 파트", "category": "관리 전/중", "title": "**당일 진행 예정 사항을 설명**하며, **액팅 전 예고멘트** 합니다.", "guide": "", "script": ["오늘 진료 잘 받으셨지요?", "원장님께서 OO이유로 OO진행 전달 주셔서, 오늘 OO효과가 있는 OO후에, OO하겠습니다.", "대략적인 소요시간은 00분 예상됩니다. 혹시 다음 일정 무리 없으실까요?", "OO에 좋은 OO팩 올려드릴텐데요, 살짝 차갑습니다~"], "tip": "기기 정리, 카트 이동, 신발 끄는 소리 등 소음 발생에 주의합니다."}, {"id": "e20", "source": ["안과"], "dept": "IPL 파트", "category": "관리 후", "title": "IPL실 입구까지 동행하여 **당일 진행된 사항 및 자가 관리 설명**합니다.", "guide": "", "script": ["(면봉에 묻은 피지 보여드리며) 노랗게 보이시죠? 원래 맑고 투명하게 나와야 되는데 노랗게 된 것은~ (중략) 순환이 잘 될 수 있게 꾸준하게 집에서도 관리해 주시면~"], "tip": ""}, {"id": "n01", "source": ["이비인후과"], "dept": "접수데스크", "category": "전화 수신/종료", "title": "**밝은 목소리로 통일된 인사**를 합니다.", "guide": "", "script": ["(수신 시) 정성을 다하겠습니다. OO이비인후과입니다.", "(종료 시) 감사합니다~"], "tip": ""}, {"id": "n02", "source": ["이비인후과"], "dept": "접수데스크", "category": "대기 시", "title": "**정중한 손짓으로 다음을 안내**합니다.", "guide": "", "script": ["앉아서 기다려 주시면 OO 안내해드리겠습니다."], "tip": ""}, {"id": "n03", "source": ["이비인후과"], "dept": "접수데스크", "category": "문진 시", "title": "**기립하여 환자 정보 노출되지 않게 응대**합니다.", "guide": "", "script": ["이쪽에서 문진 도와드리겠습니다."], "tip": ""}, {"id": "n04", "source": ["이비인후과"], "dept": "진료실", "category": "안내 시", "title": "**맞이 인사하며 오픈제스처로 진료실을 안내**합니다.", "guide": "", "script": ["안녕하세요~ 진료실로 모시겠습니다."], "tip": ""}, {"id": "n05", "source": ["이비인후과"], "dept": "진료실", "category": "예고멘트", "title": "환자가 놀라지 않도록 **액팅 전 예고멘트** 합니다.", "guide": "", "script": ["머리 잠시 잡아드리겠습니다."], "tip": ""}, {"id": "n06", "source": ["이비인후과"], "dept": "진료실", "category": "배웅 시", "title": "**업무 순서를 알 수 있도록 다음 안내**합니다.", "guide": "", "script": ["대기실에 앉아 계시면 호명해드릴게요~"], "tip": ""}, {"id": "n07", "source": ["이비인후과"], "dept": "수액실", "category": "대기 시", "title": "**수액실로 모시기 전 준비사항을 안내**하고, 대기하시는 동안 **수액 안내문을 전달**드립니다.", "guide": "", "script": ["화장실 다녀오시겠어요~?", "수액 안내문 잠시 보고 계시면, 수액실 안내해드리겠습니다."], "tip": ""}, {"id": "n08", "source": ["이비인후과"], "dept": "수액실", "category": "예고멘트", "title": "환자가 놀라지 않도록 **주사 전 예고멘트** 합니다.", "guide": "", "script": ["따끔합니다.", "피부/혈관 조건에 따라 개인차가 있어 멍이 들 수도 있습니다~"], "tip": ""}, {"id": "n09", "source": ["이비인후과"], "dept": "수액실", "category": "시간안내", "title": "환자가 예측할 수 있도록 **시간을 안내**합니다.", "guide": "", "script": ["n분 정도 소요됩니다. 팔 굽히면 OO 할 수 있으니 주의해주시고, 푹 쉬고 계세요. 도움 필요하시면 벨 눌러주세요.^^"], "tip": ""}, {"id": "w01", "source": ["여성"], "dept": "접수데스크", "category": "맞이", "title": "두리번거리는 고객 확인 시 **밝은 목소리 톤과 미소로 맞이 인사**합니다.", "guide": "", "script": ["안녕하세요~^^ 예약하셨을까요~?", "(예약자 성함 말씀주신 경우 알아보기) 네~ 000님, 0시 예약하셨죠", "(태블릿 접수 시) 혹시 도움이 필요하시면 말씀 부탁드립니다."], "tip": ""}, {"id": "w02", "source": ["여성"], "dept": "접수데스크", "category": "접수 문진", "title": "접수 시 **도움 안내**합니다.", "guide": "", "script": ["000으로 접수 부탁드리며, 혹시 도움이 필요하시면 말씀 부탁드립니다."], "tip": ""}, {"id": "w03", "source": ["여성"], "dept": "접수데스크", "category": "대기", "title": "**8명 이상의 대기자가 확인된 경우 대기 양해멘트** 합니다.", "guide": "", "script": ["000님~ 오늘 앞에 접수하신 분이 많으셔서 진료가 조금 길어지고 있습니다~ 00쪽에 대기해 주시면 끝나는 대로 안내드리겠습니다."], "tip": ""}, {"id": "w04", "source": ["여성"], "dept": "접수데스크", "category": "설명", "title": "설명이 길어지는 경우, **기립하여 상세 안내** 합니다.", "guide": "", "script": ["네, 00 안내드릴게요~ 00은~"], "tip": ""}, {"id": "w05", "source": ["여성"], "dept": "접수데스크", "category": "예약 수납", "title": "**진료 내용 확인 후 정확한 결제/다음 예약을 안내**합니다.", "guide": "가까이 다가 왔을 때 프라이빗한 음성으로 설명", "script": ["오늘 00 검사, 00 하셔서 (결제 금액 안내). 검사결과는 0일 후 나올거고요~ 다음 예약 도와드리겠습니다~"], "tip": ""}, {"id": "w06", "source": ["여성"], "dept": "전 부서", "category": "배웅", "title": "다음 여정 없는 경우, **눈 맞추며 미소로 배웅 인사**합니다.", "guide": "", "script": ["수고 많으셨습니다~ 안녕히 가세요. / 조심히 가세요~"], "tip": ""}, {"id": "w07", "source": ["여성"], "dept": "전 부서", "category": "공통", "title": "환자/보호자 응대 시 **비언어적 표현**을 사용합니다.", "guide": "밝은 표정, 부드러운 어투, 손바닥 보이는 정중한 제스처", "script": [], "tip": ""}, {"id": "w08", "source": ["여성"], "dept": "진료 간호", "category": "맞이", "title": "**밝은 목소리 톤과 미소로 맞이 인사**합니다.", "guide": "직전 진료 환자에게 설명이 필요한 경우, 진료실 문 닫아드리기", "script": ["OOO님~ 안녕하세요~^^ (정중한 손짓응대) 진료실로 들어가시면 됩니다~"], "tip": ""}, {"id": "w09", "source": ["여성"], "dept": "진료 간호", "category": "안내", "title": "**대기 30분 이상 예상되는 경우, 대기 양해멘트** 합니다.", "guide": "", "script": ["OOO님~ 오늘 앞 진료가 조금 더 길어질 거 같아서 조금만 더 기다려 주십시오. 바로 다음 진료로 들어가실 겁니다.", "OOO님~ 원장님께서 시술 예약이 있으셔서, 앞으로 00분가량 대기 예상됩니다. 기다려 주시면, 순서대로 진료 안내해드리겠습니다.", "(오랜 대기 후 안내) 오래 기다리셨지요~ 바로 진료 보시겠습니다."], "tip": ""}, {"id": "w10", "source": ["여성"], "dept": "진료 간호", "category": "설명", "title": "**눈 맞추며 설명 후 추가 문의 사항** 여부 확인합니다.", "guide": "", "script": ["OOO님~ OO관련해서 혹시 더 궁금하신 점 있으실까요?"], "tip": ""}, {"id": "w11", "source": ["여성"], "dept": "진료 간호", "category": "배웅", "title": "**주의사항 + 다음 과정을 상세히 안내**합니다.", "guide": "", "script": ["오늘부터 00 주의하시고요~", "앞쪽 데스크 앞 대기실에서 기다려 주시면, 수납 후에 000 안내해주실 겁니다."], "tip": ""}, {"id": "w12", "source": ["여성"], "dept": "상담실", "category": "맞이", "title": "**밝은 목소리 톤과 미소로 맞이 인사 후 소개**합니다. 짐 보관 및 착석 안내 시 **정중한 제스처**를 활용합니다.", "guide": "", "script": ["(손바닥 보이게 손 들어 보이며) 000님, 안녕하세요~^^ 저는 오늘 상담 도와드릴 000입니다.", "외투/가방은 0쪽에 두시고요~ 편하게 앉아 주시면 됩니다."], "tip": ""}, {"id": "w13", "source": ["여성"], "dept": "상담실", "category": "사전 설명", "title": "**정중한 어투로 환자 정보 사전 확인 이유 안내** 후 상담 진행합니다.", "guide": "", "script": ["오늘 저희 병원 처음 오셨지요~", "원장님 진료 보시기 전에 원활한 진료 진행을 위해서 제가 진료에 필요한 사항 몇 가지 확인하겠습니다."], "tip": ""}, {"id": "w14", "source": ["여성"], "dept": "상담실", "category": "다음 안내", "title": "**협조에 대한 감사인사 + 다음 과정을 상세히 안내**합니다.", "guide": "", "script": ["정보 확인 감사합니다. 원장님께 잘 전달 드리겠습니다.", "대기실에 잠시만 앉아 계시면 00 안내해드리겠습니다."], "tip": ""}, {"id": "w15", "source": ["여성"], "dept": "주사실/검사실", "category": "맞이", "title": "**밝은 목소리 톤과 표정으로 맞이 인사**합니다. 짐 보관 및 착석 안내 시 **정중한 손짓응대**를 활용합니다.", "guide": "", "script": ["000님~ 안녕하세요~^^ 생년월일이 어떻게 되세요?", "짐은 0쪽에 보관 부탁드리고요~ 00쪽에 앉아 주시면 됩니다."], "tip": ""}, {"id": "w16", "source": ["여성"], "dept": "주사실/검사실", "category": "안내", "title": "**액팅 전 행동 + 자극 예고멘트**합니다.", "guide": "", "script": ["00부위 00 하겠습니다.", "차갑습니다~ / 따끔 합니다~", "00한 느낌 드실 수 있습니다~"], "tip": "'예고없는 액팅', '액팅 후 멘트'에 환자가 놀랄 수 있어요 🫢"}, {"id": "w17", "source": ["여성"], "dept": "주사실/검사실", "category": "배웅", "title": "**수고멘트 후 주의사항 + 다음 과정을 상세히 안내**합니다.", "guide": "", "script": ["수고 많으셨습니다~", "주사 맞으신 곳은 0분 동안 꾹 눌러주시고요~", "다음 00실로 가시면 됩니다."], "tip": ""}]}</script>
+<script>
+(function () {
+  "use strict";
+
+  const DATA = JSON.parse(document.getElementById("manual-data").textContent);
+  const BASE = DATA.items;
+  const STORE_KEY = "kickManualBuilder.v1";
+  // 웹 링크(claude.ai)처럼 다른 페이지 안에 들어가 있으면 인쇄·다운로드가 막혀 있다
+  const EMBEDDED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
+
+  const THEMES = [
+    { id: "classic", name: "클래식 블루", desc: "네이비 · 쿨그레이 · 화이트", sw: ["#22385C", "#7F95B6", "#E6EBF2", "#FFFFFF"] },
+    { id: "beige", name: "모던 베이지", desc: "웜베이지 · 샴페인 모카 · 크림", sw: ["#6E5440", "#A98568", "#EDE3D6", "#FAF4EC"] },
+    { id: "rose", name: "소프트 로즈", desc: "인디핑크 · 더스티로즈 · 소프트베이지", sw: ["#9E5361", "#CF8F98", "#F3E2E1", "#FCF3EF"] },
+    { id: "sage", name: "세이지 그린", desc: "세이지그린 · 포레스트 · 민트아이보리", sw: ["#355543", "#7F9F86", "#E2EADF", "#F3F7EF"] },
+    { id: "charcoal", name: "차콜 모노", desc: "차콜 · 쿨그레이 · 라이트그레이", sw: ["#2B2F36", "#A3A8B0", "#E9EAEC", "#F3F4F6"] },
+    { id: "teal", name: "오션 틸", desc: "딥틸 · 민트그레이 · 페일아쿠아", sw: ["#1F5F66", "#8DB8BB", "#E0ECEC", "#EEF6F6"] },
+    { id: "lavender", name: "라벤더 미스트", desc: "딥라벤더 · 라일락그레이 · 페일라벤더", sw: ["#5B4F8A", "#ADA4D1", "#E9E6F2", "#F4F2FA"] },
+    { id: "terracotta", name: "테라코타 샌드", desc: "테라코타 · 샌드 · 오트밀", sw: ["#A0522D", "#D7AE90", "#F1E6DE", "#FBF4EE"] }
+  ];
+  const EMOJIS = ["😊", "🌿", "🩺", "✨", "💙", "🤍", "🌸", "🍀", "🙌", "💬"];
+  const SOURCES = ["전체"].concat(Object.keys(DATA.sources), ["직접 추가"]);
+
+  const DEFAULTS = {
+    theme: "classic", hospital: "OO병원", team: "접수데스크팀",
+    slogan: "나의 가치를 높이는 **자연스러운 미소 장착**", emoji: "",
+    selected: ["c01", "c02", "c03", "c04"],
+    merge: true, check: false, review: false, start: nextMonday(), fs: 100,
+    src: "전체", groupBy: "category", overrides: {}, customs: []
+  };
+
+  let state = load();
+  let editingId = null;
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) return Object.assign(clone(DEFAULTS), JSON.parse(raw));
+    } catch (e) { /* 저장소를 못 쓰는 환경이면 기본값 */ }
+    return clone(DEFAULTS);
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* 무시 */ }
+  }
+
+  // ───────── 알림 (브라우저 팝업 대신) ─────────
+  let toastTimer = null;
+  function toast(msg, actLabel, act) {
+    const t = document.getElementById("toast"), b = document.getElementById("toastAct");
+    document.getElementById("toastMsg").textContent = msg;
+    b.hidden = !actLabel; b.textContent = actLabel || "";
+    b.onclick = () => { t.hidden = true; if (act) act(); };
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, actLabel ? 7000 : 3500);
+  }
+  function withUndo(msg, change) {
+    const before = clone(state);
+    change();
+    toast(msg, "되돌리기", () => { state = before; save(); renderAll(); });
+  }
+
+  // ───────── 데이터 조회 ─────────
+  function allItems() {
+    return BASE.map(it => state.overrides[it.id] ? Object.assign({}, it, state.overrides[it.id], { edited: true }) : it)
+      .concat(state.customs.map(c => Object.assign({ custom: true }, c)));
+  }
+  function getItem(id) { return allItems().find(it => it.id === id); }
+
+  // ───────── 텍스트 렌더링 ─────────
+  function esc(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function emph(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>"); }
+  function plain(s) { return String(s || "").replace(/\*\*/g, ""); }
+  function labels(html) { return html.replace(/\[([^\]]+)\]/g, '<span class="lbl">$1</span>'); }
+
+  function scriptLine(line) {
+    let rest = String(line).trim(), pre = "", mark = "";
+    if (rest.startsWith("❌")) { mark = "bad"; rest = rest.slice(1).trim(); }
+    else if (rest.startsWith("⭕")) { mark = "good"; rest = rest.slice(1).trim(); }
+    let m;
+    while ((m = rest.match(/^\[([^\]]+)\]\s*/))) { pre += '<span class="lbl">' + esc(m[1]) + "</span>"; rest = rest.slice(m[0].length); }
+    while ((m = rest.match(/^\(([^)]+)\)\s*/))) { pre += '<span class="dir">(' + esc(m[1]) + ")</span> "; rest = rest.slice(m[0].length); }
+    const body = esc(rest).replace(/\(([^)]+)\)/g, '<span class="dir">($1)</span>');
+    const markHtml = mark === "bad" ? '<span class="mk">❌</span>' : mark === "good" ? '<span class="mk">⭕</span>' : "";
+    return '<p class="' + (mark === "bad" ? "bad" : "") + '">' + markHtml + pre + '<span class="q">“' + body + "”</span></p>";
+  }
+
+  // ───────── 미리보기 ─────────
+  const page = document.getElementById("page");
+
+  function renderPreview() {
+    document.documentElement.dataset.form = state.theme;
+    page.style.setProperty("--fs", state.fs / 100);
+    document.getElementById("pHospital").textContent = state.hospital;
+    document.getElementById("pTeam").textContent = state.team;
+    document.getElementById("pTeam").hidden = !state.team;
+    const slogan = (emph(state.slogan) + (state.emoji ? " " + esc(state.emoji) : "")).trim();
+    document.getElementById("pSlogan").innerHTML = slogan;
+    document.getElementById("pSlogan").hidden = !slogan;
+    document.getElementById("pName").hidden = !state.check;
+    document.getElementById("pLegend").hidden = !state.check;
+    document.getElementById("pReview").innerHTML = state.check && state.review
+      ? '<div class="m-review"><div>잘 하고 있는 점</div><div>노력이 필요한 점</div><div></div><div></div></div>' : "";
+
+    const items = state.selected.map(getItem).filter(Boolean);
+    const body = document.getElementById("pBody");
+    if (!items.length) {
+      body.innerHTML = '<div class="m-empty"><div>왼쪽 <b>매뉴얼 단락 풀</b>에서<br>넣을 단락을 체크해 주세요.</div></div>';
+      measure();
+      return;
+    }
+    const rows = [];
+    items.forEach(it => {
+      const last = rows[rows.length - 1];
+      if (state.merge && last && last.category === it.category) last.items.push(it);
+      else rows.push({ category: it.category, items: [it] });
+    });
+    const days = checkDays();
+    body.innerHTML = rows.map(r => {
+      const len = r.category.replace(/\s/g, "").length;
+      const cls = len > 7 ? "xlong" : len > 4 ? "long" : "";
+      const blocks = r.items.map(it => {
+        let h = '<div class="m-block"><div class="m-t">' + labels(emph(it.title)) + "</div>";
+        if (it.guide) h += '<div class="m-g">' + labels(esc(it.guide)) + "</div>";
+        if (it.script && it.script.length) h += '<div class="m-s">' + it.script.map(scriptLine).join("") + "</div>";
+        if (it.tip) h += '<div class="m-tip">' + esc(it.tip) + "</div>";
+        if (state.check) h += '<div class="m-check">' + days.map(d => "<div>" + d + "</div>").join("") + "<div></div>".repeat(6) + "</div>";
+        return h + "</div>";
+      }).join("");
+      return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '">' + esc(r.category) + '</div></div><div class="m-content">' + blocks + "</div></div>";
+    }).join("");
+    measure();
+  }
+
+  function checkDays() {
+    const names = ["일", "월", "화", "수", "목", "금", "토"];
+    const d = state.start ? new Date(state.start + "T00:00:00") : null;
+    if (!d || isNaN(d)) return ["월", "화", "수", "목", "금", "토"];
+    const out = [];
+    for (let i = 0; out.length < 6; i++) {
+      const x = new Date(d); x.setDate(d.getDate() + i);
+      if (x.getDay() === 0) continue;
+      out.push((x.getMonth() + 1) + "/" + x.getDate() + "(" + names[x.getDay()] + ")");
+    }
+    return out;
+  }
+
+  function overflowRatio() {
+    const body = document.getElementById("pBody");
+    if (body.querySelector(".m-empty")) return 0;
+    const need =Array.from(body.children).reduce((s, el) => s + el.offsetHeight, 0);
+    return body.clientHeight ? need / body.clientHeight : 0;
+  }
+  function measure() {
+    const ratio = overflowRatio();
+    const fill = document.getElementById("fill");
+    const pct = Math.round(ratio * 100);
+    fill.classList.toggle("over", ratio > 1.001);
+    fill.querySelector("i").style.width = Math.min(pct, 100) + "%";
+    fill.querySelector("b").textContent = ratio > 1.001 ? pct + "% · 1장 초과" : pct + "%";
+    fitStage();
+  }
+
+  // ───────── 미리보기 배율 ─────────
+  const ZOOM_STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 0.9, 1, 1.25, 1.5, 1.75, 2];
+  let zoomMode = loadZoom();
+  let curScale = 1;
+  function loadZoom() {
+    try { const z = localStorage.getItem(STORE_KEY + ".zoom"); if (z) return z === "page" || z === "width" ? z : +z; } catch (e) { /* 무시 */ }
+    return "page";
+  }
+  function setZoom(z) {
+    zoomMode = z;
+    try { localStorage.setItem(STORE_KEY + ".zoom", String(z)); } catch (e) { /* 무시 */ }
+    fitStage();
+  }
+  function stepZoom(dir) {
+    const next = dir > 0 ? ZOOM_STEPS.find(s => s > curScale + 0.005) : ZOOM_STEPS.slice().reverse().find(s => s < curScale - 0.005);
+    setZoom(next || (dir > 0 ? ZOOM_STEPS[ZOOM_STEPS.length - 1] : ZOOM_STEPS[0]));
+  }
+
+  function fitStage() {
+    const wrap = document.getElementById("stageWrap"), stage = document.getElementById("stage");
+    const w = page.offsetWidth, h = page.offsetHeight;
+    const cs = getComputedStyle(wrap);
+    const availW = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const availH = wrap.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    let scale = zoomMode;
+    if (zoomMode === "width") scale = availW / w;
+    if (zoomMode === "page") scale = Math.min(availW / w, availH / h);
+    scale = Math.max(0.1, scale || 1);
+    curScale = scale;
+    stage.style.transform = "scale(" + scale + ")";
+    stage.style.width = w * scale + "px";
+    stage.style.height = h * scale + "px";
+
+    const sel = document.getElementById("zoomSel");
+    const pct = Math.round(scale * 100);
+    const opts = ZOOM_STEPS.map(s => Math.round(s * 100));
+    if (!opts.includes(pct)) opts.push(pct);
+    opts.sort((a, b) => a - b);
+    sel.innerHTML = opts.map(o => '<option value="' + o + '"' + (o === pct ? " selected" : "") + ">" + o + "%</option>").join("");
+    document.querySelectorAll("#zoom [data-zoom]").forEach(b => b.classList.toggle("on", b.dataset.zoom === zoomMode));
+  }
+
+  // ───────── 패널 렌더 ─────────
+  function renderThemes() {
+    document.getElementById("themes").innerHTML = THEMES.map(t =>
+      '<button class="theme-card' + (t.id === state.theme ? " on" : "") + '" data-theme-id="' + t.id + '" aria-pressed="' + (t.id === state.theme) + '">' +
+      '<div class="sw">' + t.sw.map(c => '<span style="background:' + c + '"></span>').join("") + "</div>" +
+      "<b>" + t.name + "</b><small>" + t.desc + "</small></button>").join("");
+  }
+  function renderEmojis() {
+    const custom = EMOJIS.includes(state.emoji) ? "" : state.emoji;
+    document.getElementById("emojiRow").innerHTML = EMOJIS.map(e =>
+      '<button data-emoji="' + e + '" class="' + (e === state.emoji ? "on" : "") + '" aria-label="이모지 ' + e + '">' + e + "</button>").join("") +
+      '<input type="text" id="emojiInput" placeholder="직접" maxlength="8" aria-label="이모지 직접 입력" value="' + esc(custom) + '">';
+    document.getElementById("emojiNow").textContent = state.emoji ? "· " + state.emoji : "";
+  }
+
+  function renderSelected() {
+    const list = document.getElementById("selList");
+    const items = state.selected.map(getItem).filter(Boolean);
+    document.getElementById("selCount").textContent = items.length;
+    if (!items.length) { list.innerHTML = '<li class="empty" style="border:none;background:none;cursor:default">아직 선택된 단락이 없습니다.</li>'; return; }
+    list.innerHTML = items.map((it, i) =>
+      '<li draggable="true" data-id="' + it.id + '"><span class="idx">' + (i + 1) + "</span>" +
+      '<div class="txt"><b>' + esc(it.category) + "</b><span>" + esc(plain(it.title)) + "</span></div>" +
+      '<button class="icon-btn" data-act="up" ' + (i === 0 ? "disabled" : "") + ' aria-label="위로">▲</button>' +
+      '<button class="icon-btn" data-act="down" ' + (i === items.length - 1 ? "disabled" : "") + ' aria-label="아래로">▼</button>' +
+      '<button class="icon-btn" data-act="remove" aria-label="빼기">✕</button></li>').join("");
+  }
+
+  function srcOf(it) { return it.custom ? ["직접 추가"] : it.source; }
+  function visibleItems() {
+    const q = document.getElementById("search").value.trim().toLowerCase();
+    return allItems().filter(it => {
+      if (state.src !== "전체" && !srcOf(it).includes(state.src)) return false;
+      if (!q) return true;
+      return [it.category, it.dept, it.title, it.guide, it.tip].concat(it.script || []).join(" ").toLowerCase().includes(q);
+    });
+  }
+
+  function renderChips() {
+    document.getElementById("srcChips").innerHTML = SOURCES.map(s =>
+      '<button class="chip' + (s === state.src ? " on" : "") + '" data-src="' + s + '">' + s + "</button>").join("");
+    document.getElementById("presets").innerHTML = DATA.presets.map((p, i) =>
+      (state.src === "전체" || state.src === p.source)
+        ? '<button class="chip" data-preset="' + i + '" title="' + p.ids.length + '개 단락 · 원본 순서">' + esc(p.source) + " · " + esc(p.team) + "</button>" : ""
+    ).join("") || '<span class="hint">이 계열에는 원본 장표가 없습니다.</span>';
+  }
+
+  // 제목이 비슷한 단락을 구분할 수 있도록 첫 멘트(없으면 가이드)를 한 줄 미리 보여 준다
+  function preview(it) {
+    const first = (it.script && it.script[0]) || it.guide || it.tip;
+    return first ? '<div class="pv">' + esc(first.replace(/^\s*(❌|⭕)\s*/, "$1 ")) + "</div>" : "";
+  }
+
+  function renderPool() {
+    const items = visibleItems();
+    const key = state.groupBy === "dept" ? "dept" : "category";
+    const groups = new Map();
+    items.forEach(it => {
+      if (!groups.has(it[key])) groups.set(it[key], []);
+      groups.get(it[key]).push(it);
+    });
+    const sel = new Set(state.selected);
+    if (!items.length) { document.getElementById("pool").innerHTML = '<div class="empty">조건에 맞는 단락이 없습니다.</div>'; return; }
+    document.getElementById("pool").innerHTML = Array.from(groups.entries()).map(([g, arr]) => {
+      const allOn = arr.every(it => sel.has(it.id));
+      return '<div class="grp"><div class="grp-h">' + esc(g) + " <small>" + arr.length + '</small><span class="line"></span>' +
+        '<button class="icon-btn" data-grp="' + esc(arr.map(i => i.id).join(",")) + '" data-on="' + (allOn ? 1 : 0) + '">' + (allOn ? "모두 빼기" : "모두 담기") + "</button></div>" +
+        arr.map(it => {
+          const tags = (key !== "category" ? '<span class="tag cat">' + esc(it.category) + "</span>" : "") +
+            (it.custom ? '<span class="tag custom">직접 추가</span>' : "") +
+            (it.edited ? '<span class="tag custom">수정됨</span>' : "");
+          return '<div class="pool-item"><input type="checkbox" data-pick="' + it.id + '" aria-label="' + esc(plain(it.title)) + '" ' + (sel.has(it.id) ? "checked" : "") + ">" +
+            '<div class="body" data-toggle="' + it.id + '"><div class="t">' + emph(it.title) + "</div>" + preview(it) + (tags ? '<div class="meta">' + tags + "</div>" : "") + "</div>" +
+            '<button class="icon-btn" data-edit="' + it.id + '" aria-label="수정">✎</button></div>';
+        }).join("") + "</div>";
+    }).join("");
+  }
+
+  function renderInfo() {
+    ["hospital", "team", "slogan"].forEach(k => { const el = document.getElementById(k); if (el.value !== state[k]) el.value = state[k]; });
+    document.getElementById("sloganPreset").innerHTML = '<option value="">원본 슬로건에서 가져오기…</option>' +
+      DATA.slogans.map((s, i) => '<option value="' + i + '">[' + s.source.join("·") + "] " + esc(plain(s.text)) + " " + s.emoji + "</option>").join("");
+    document.getElementById("optMerge").checked = state.merge;
+    document.getElementById("optCheck").checked = state.check;
+    document.getElementById("optReview").checked = state.review;
+    document.getElementById("optStart").value = state.start;
+    document.getElementById("checkOpts").hidden = !state.check;
+    document.getElementById("optFs").value = state.fs;
+    document.getElementById("fsVal").textContent = state.fs + "%";
+    document.getElementById("groupBy").value = state.groupBy;
+  }
+
+  function renderAll() {
+    renderThemes(); renderEmojis(); renderInfo(); renderSelected(); renderChips(); renderPool(); renderPreview();
+  }
+  function update(opts) {
+    save();
+    if (!opts || opts.panel !== false) { renderSelected(); renderPool(); }
+    renderPreview();
+  }
+
+  function toggle(id, on) {
+    const i = state.selected.indexOf(id);
+    if (on === undefined) on = i < 0;
+    if (on && i < 0) state.selected.push(id);
+    if (!on && i >= 0) state.selected.splice(i, 1);
+  }
+  function move(id, delta) {
+    const i = state.selected.indexOf(id), j = i + delta;
+    if (i < 0 || j < 0 || j >= state.selected.length) return;
+    state.selected.splice(j, 0, state.selected.splice(i, 1)[0]);
+  }
+
+  // ───────── 이벤트 ─────────
+  const F = id => document.getElementById(id);
+
+  F("themes").addEventListener("click", e => {
+    const b = e.target.closest("[data-theme-id]"); if (!b) return;
+    state.theme = b.dataset.themeId; save(); renderThemes(); renderPreview();
+  });
+  F("emojiRow").addEventListener("click", e => {
+    const b = e.target.closest("[data-emoji]"); if (!b) return;
+    state.emoji = state.emoji === b.dataset.emoji ? "" : b.dataset.emoji; save(); renderEmojis(); renderPreview();
+  });
+  F("emojiRow").addEventListener("input", e => {
+    if (e.target.id !== "emojiInput") return;
+    state.emoji = e.target.value.trim(); save(); renderPreview();
+    F("emojiNow").textContent = state.emoji ? "· " + state.emoji : "";
+    document.querySelectorAll("#emojiRow button").forEach(b => b.classList.toggle("on", b.dataset.emoji === state.emoji));
+  });
+  ["hospital", "team", "slogan"].forEach(k => F(k).addEventListener("input", e => {
+    state[k] = e.target.value; save(); renderPreview();
+  }));
+  F("sloganPreset").addEventListener("change", e => {
+    const s = DATA.slogans[e.target.value]; if (!s) return;
+    state.slogan = s.text; state.emoji = s.emoji;
+    save(); renderInfo(); renderEmojis(); renderPreview();
+  });
+
+  const selList = F("selList");
+  selList.addEventListener("click", e => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const id = b.closest("li").dataset.id;
+    if (b.dataset.act === "up") move(id, -1);
+    if (b.dataset.act === "down") move(id, 1);
+    if (b.dataset.act === "remove") toggle(id, false);
+    update();
+  });
+  let dragId = null;
+  selList.addEventListener("dragstart", e => {
+    const li = e.target.closest("li[data-id]"); if (!li) return;
+    dragId = li.dataset.id; li.classList.add("dragging"); e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", dragId); } catch (err) { /* 일부 브라우저 */ }
+  });
+  selList.addEventListener("dragover", e => {
+    e.preventDefault();
+    selList.querySelectorAll(".drop-before").forEach(x => x.classList.remove("drop-before"));
+    const li = e.target.closest("li[data-id]"); if (li && li.dataset.id !== dragId) li.classList.add("drop-before");
+  });
+  selList.addEventListener("drop", e => {
+    e.preventDefault();
+    const li = e.target.closest("li[data-id]");
+    if (dragId) {
+      state.selected.splice(state.selected.indexOf(dragId), 1);
+      let to = li ? state.selected.indexOf(li.dataset.id) : state.selected.length;
+      if (to < 0) to = state.selected.length;
+      state.selected.splice(to, 0, dragId);
+    }
+    dragId = null; update();
+  });
+  selList.addEventListener("dragend", () => { dragId = null; renderSelected(); });
+
+  F("srcChips").addEventListener("click", e => {
+    const b = e.target.closest("[data-src]"); if (!b) return;
+    state.src = b.dataset.src; save(); renderChips(); renderPool();
+  });
+  F("presets").addEventListener("click", e => {
+    const b = e.target.closest("[data-preset]"); if (!b) return;
+    const p = DATA.presets[b.dataset.preset];
+    withUndo("'" + p.source + " · " + p.team + "' 원본 구성으로 바꿨습니다.", () => {
+      state.selected = p.ids.slice();
+      state.team = p.team;
+      const s = DATA.slogans[p.slogan];
+      if (s) { state.slogan = s.text; state.emoji = s.emoji; }
+    });
+    save(); renderInfo(); renderEmojis(); update();
+  });
+  F("search").addEventListener("input", renderPool);
+  F("groupBy").addEventListener("change", e => { state.groupBy = e.target.value; save(); renderPool(); });
+
+  F("pool").addEventListener("click", e => {
+    const grp = e.target.closest("[data-grp]");
+    if (grp) { grp.dataset.grp.split(",").forEach(id => toggle(id, grp.dataset.on !== "1")); update(); return; }
+    const ed = e.target.closest("[data-edit]");
+    if (ed) { openEdit(ed.dataset.edit); return; }
+    const tg = e.target.closest("[data-toggle]");
+    if (tg) { toggle(tg.dataset.toggle); update(); }
+  });
+  F("pool").addEventListener("change", e => {
+    const cb = e.target.closest("[data-pick]"); if (!cb) return;
+    toggle(cb.dataset.pick, cb.checked); update();
+  });
+
+  // ───────── 단락 추가/수정 폼 ─────────
+  function formValue() {
+    return {
+      category: F("fCat").value.trim(), dept: F("fDept").value.trim() || "직접 추가",
+      title: F("fTitle").value.trim(), guide: F("fGuide").value.trim().replace(/^\(\s*|\s*\)$/g, ""),
+      script: F("fScript").value.split("\n").map(s => s.trim().replace(/^[“"]|[”"]$/g, "")).filter(Boolean),
+      tip: F("fTip").value.trim()
+    };
+  }
+  function clearForm() {
+    editingId = null;
+    ["fCat", "fDept", "fTitle", "fGuide", "fScript", "fTip"].forEach(id => F(id).value = "");
+    F("formTitle").textContent = "새 단락 추가"; F("fSave").textContent = "추가하고 선택";
+    F("fReset").hidden = true; F("fCancel").hidden = true; F("fErr").hidden = true;
+  }
+  function openEdit(id) {
+    const it = getItem(id); if (!it) return;
+    editingId = id;
+    F("fCat").value = it.category; F("fDept").value = it.dept; F("fTitle").value = it.title;
+    F("fGuide").value = it.guide || ""; F("fScript").value = (it.script || []).join("\n"); F("fTip").value = it.tip || "";
+    F("formTitle").textContent = "단락 수정 · " + it.category; F("fSave").textContent = "수정 저장";
+    F("fReset").hidden = !it.edited; F("fCancel").hidden = false; F("fErr").hidden = true;
+    F("formSec").open = true; F("formSec").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  F("fSave").addEventListener("click", () => {
+    const v = formValue();
+    if (!v.category || !v.title) { F("fErr").hidden = false; return; }
+    if (editingId) {
+      const c = state.customs.find(x => x.id === editingId);
+      if (c) Object.assign(c, v); else state.overrides[editingId] = v;
+      toast("단락을 수정했습니다.");
+    } else {
+      const id = "u" + Date.now().toString(36);
+      state.customs.push(Object.assign({ id: id, source: ["직접 추가"] }, v));
+      state.selected.push(id);
+      toast("새 단락을 추가하고 매뉴얼에 넣었습니다.");
+    }
+    clearForm(); update();
+  });
+  F("fReset").addEventListener("click", () => { if (editingId) delete state.overrides[editingId]; clearForm(); update(); toast("원본 문구로 되돌렸습니다."); });
+  F("fCancel").addEventListener("click", clearForm);
+
+  // ───────── 옵션 ─────────
+  F("optMerge").addEventListener("change", e => { state.merge = e.target.checked; update({ panel: false }); });
+  F("optCheck").addEventListener("change", e => { state.check = e.target.checked; renderInfo(); update({ panel: false }); });
+  F("optReview").addEventListener("change", e => { state.review = e.target.checked; update({ panel: false }); });
+  F("optStart").addEventListener("change", e => { state.start = e.target.value; update({ panel: false }); });
+  F("optFs").addEventListener("input", e => { state.fs = +e.target.value; F("fsVal").textContent = state.fs + "%"; update({ panel: false }); });
+  F("autoFit").addEventListener("click", () => {
+    state.fs = 115; renderPreview();
+    while (overflowRatio() > 1 && state.fs > 70) { state.fs -= 1; renderPreview(); }
+    save(); renderInfo();
+    if (overflowRatio() > 1) toast("글자를 70%까지 줄여도 A4 1장을 넘습니다. 단락을 몇 개 빼 주세요.");
+    else toast("글자 크기를 " + state.fs + "%로 맞췄습니다.");
+  });
+
+  F("exportJson").addEventListener("click", () => {
+    const out = { exported: new Date().toISOString().slice(0, 10), overrides: state.overrides, customs: state.customs };
+    const text = JSON.stringify(out, null, 2);
+    if (EMBEDDED) {
+      navigator.clipboard.writeText(text)
+        .then(() => toast("단락 데이터를 클립보드에 복사했습니다. 메모장에 붙여 .json으로 저장하세요."))
+        .catch(() => toast("복사하지 못했습니다. 공유 드라이브의 HTML 파일에서 내보내기를 이용해 주세요."));
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    a.download = "킥매뉴얼_직접추가단락_" + out.exported + ".json"; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  F("importJson").addEventListener("click", () => F("importFile").click());
+  F("importFile").addEventListener("change", e => {
+    const file = e.target.files[0]; if (!file) return;
+    file.text().then(txt => {
+      const d = JSON.parse(txt);
+      Object.assign(state.overrides, d.overrides || {});
+      let n = 0;
+      (d.customs || []).forEach(c => { if (!state.customs.some(x => x.id === c.id)) { state.customs.push(c); n++; } });
+      update(); toast("단락을 불러왔습니다. (새 단락 " + n + "개)");
+    }).catch(() => toast("JSON 파일을 읽지 못했습니다. 내보내기로 만든 파일인지 확인해 주세요."));
+    e.target.value = "";
+  });
+
+  F("resetAll").addEventListener("click", () => {
+    // 기본 예시가 아니라 빈 종이로 돌린다. 직접 추가·수정한 단락은 지우지 않는다.
+    withUndo("모든 선택과 입력값을 비웠습니다.", () => {
+      state = Object.assign(clone(DEFAULTS), {
+        hospital: "", team: "", slogan: "", emoji: "", selected: [],
+        overrides: state.overrides, customs: state.customs
+      });
+    });
+    F("search").value = "";
+    save(); clearForm(); renderAll();
+  });
+
+  if (EMBEDDED) {
+    F("printBtn").hidden = true;
+    F("printNote").textContent = "PPT는 PowerPoint에서 바로 고칠 수 있습니다";
+    F("exportJson").textContent = "단락 데이터 복사";
+    F("exportHint").textContent = "직접 추가·수정한 단락은 이 브라우저에만 저장됩니다. '단락 데이터 복사'로 옮겨 담은 JSON 파일을 다른 곳에서 '불러오기' 하세요.";
+  }
+  // 내용이 1장을 넘으면 한 번 확인받고 진행한다
+  function guardOverflow(label, go) {
+    if (overflowRatio() > 1.001) { toast("내용이 A4 1장을 넘어 아래쪽이 잘립니다.", label, go); return; }
+    go();
+  }
+  F("printBtn").addEventListener("click", () => guardOverflow("그래도 인쇄", () => window.print()));
+  F("pptBtn").addEventListener("click", () => startExport("pptBtn", "그래도 받기", exportPpt));
+  F("pdfBtn").addEventListener("click", () => startExport("pdfBtn", "그래도 받기", exportPdf));
+
+  // ───────── PPT · PDF 내보내기 ─────────
+  // 라이브러리는 버튼을 처음 누를 때만 불러온다 (인터넷 필요)
+  const LIBS = {
+    pptx: "https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js",
+    canvas: "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
+    pdf: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+  };
+  const loaded = {};
+  function loadLib(key) {
+    if (!loaded[key]) loaded[key] = new Promise((ok, fail) => {
+      const s = document.createElement("script");
+      s.src = LIBS[key]; s.onload = ok;
+      s.onerror = () => { delete loaded[key]; fail(new Error("lib")); };
+      document.head.appendChild(s);
+    });
+    return loaded[key];
+  }
+
+  let busy = false;
+  function startExport(btnId, label, fn) {
+    if (busy) return;
+    if (!state.selected.map(getItem).filter(Boolean).length) { toast("먼저 넣을 단락을 골라 주세요."); return; }
+    guardOverflow(label, async () => {
+      const btn = F(btnId), text = btn.textContent;
+      busy = true; btn.disabled = true; btn.textContent = "만드는 중…";
+      try { await fn(); }
+      catch (e) {
+        toast(e && e.message === "lib" ? "변환 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요." : "파일을 만들지 못했습니다. 다시 시도해 주세요.");
+        console.error(e);
+      } finally { busy = false; btn.disabled = false; btn.textContent = text; }
+    });
+  }
+
+  function fileName(ext) {
+    const d = new Date();
+    const day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const name = [state.hospital, state.team, "킥매뉴얼", day].map(s => String(s || "").trim()).filter(Boolean).join("_");
+    return name.replace(/[\\/:*?"<>|]/g, "") + "." + ext;
+  }
+
+  // 웹 링크(claude.ai) 안에서는 downloads 기능으로, 파일로 열었을 땐 브라우저 다운로드로 저장한다
+  async function saveBlob(blob, name, doneMsg) {
+    if (EMBEDDED) {
+      const dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
+      if (!dl) { toast("이 화면에서는 파일을 받을 수 없습니다. 공유 드라이브의 kick_manual_builder.html에서 받아 주세요."); return; }
+      try { await dl.save({ filename: name, data: blob }); toast(doneMsg); }
+      catch (e) { if (!e || e.code !== "declined") toast("파일을 저장하지 못했습니다. (" + ((e && e.code) || "오류") + ")"); }
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast(doneMsg);
+  }
+
+  // PDF: 미리보기 종이를 고해상도 이미지로 떠서 A4 한 장에 넣는다
+  async function exportPdf() {
+    await Promise.all([loadLib("canvas"), loadLib("pdf")]);
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const canvas = await window.html2canvas(page, {
+      scale: 3, backgroundColor: null, logging: false,
+      onclone: doc => {
+        doc.getElementById("stage").style.transform = "none";
+        doc.getElementById("page").style.boxShadow = "none";
+      }
+    });
+    const pdf = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 210, 297);
+    await saveBlob(pdf.output("blob"), fileName("pdf"), "PDF를 내려받았습니다.");
+  }
+
+  // PPT: 미리보기에 그려진 위치를 재서 글상자·도형·표로 옮긴다. 그림이 아니라서 PowerPoint에서 바로 고칠 수 있다.
+  const PX = 1 / 96;   // px → inch
+  const PT = 0.75;     // px → pt
+  function hex(c) {
+    const m = String(c || "").match(/rgba?\(([^)]+)\)/); if (!m) return null;
+    const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+    if (p.length > 3 && p[3] === 0) return null;
+    return p.slice(0, 3).map(v => Math.round(v).toString(16).padStart(2, "0")).join("").toUpperCase();
+  }
+  function face(weight) {
+    const w = +weight || 400;
+    if (w >= 800) return { fontFace: "Pretendard ExtraBold", bold: false };
+    if (w >= 700) return { fontFace: "Pretendard", bold: true };
+    if (w >= 600) return { fontFace: "Pretendard SemiBold", bold: false };
+    if (w >= 500) return { fontFace: "Pretendard Medium", bold: false };
+    if (w >= 300 && w < 400) return { fontFace: "Pretendard Light", bold: false };
+    return { fontFace: "Pretendard", bold: false };
+  }
+  function lineH(cs) {
+    const lh = parseFloat(cs.lineHeight);
+    return (isNaN(lh) ? parseFloat(cs.fontSize) * 1.3 : lh) * PT;
+  }
+
+  async function exportPpt() {
+    await loadLib("pptx");
+    const scale = curScale, base = page.getBoundingClientRect();
+    const box = el => {
+      const r = el.getBoundingClientRect();
+      return { x: (r.left - base.left) / scale * PX, y: (r.top - base.top) / scale * PX, w: r.width / scale * PX, h: r.height / scale * PX };
+    };
+    const shown = el => el && !el.hidden && el.getClientRects().length > 0;
+    const css = (el, p) => getComputedStyle(el, p);
+
+    function run(text, el) {
+      const cs = css(el);
+      const o = Object.assign({ color: hex(cs.color) || "000000", fontSize: Math.round(parseFloat(cs.fontSize) * PT * 10) / 10 }, face(cs.fontWeight));
+      const ls = parseFloat(cs.letterSpacing); if (ls) o.charSpacing = Math.round(ls * PT * 100) / 100;
+      if (cs.textDecorationLine.includes("line-through")) o.strike = "sngStrike";
+      const lbl = el.closest(".lbl"); if (lbl) o.highlight = hex(css(lbl).backgroundColor) || undefined;
+      return { text: text, options: o };
+    }
+    // 한 요소 안의 글자를 색·굵기·크기별 조각(run)으로 나눈다. ::before/::after 글자도 포함한다.
+    function runsOf(el) {
+      const out = [];
+      const pseudo = which => {
+        const c = css(el, which).content;
+        if (c && c[0] === '"' && c.length > 2) out.push(run(c.slice(1, -1), el));
+      };
+      const walk = node => node.childNodes.forEach(n => {
+        if (n.nodeType === 3) { const t = n.nodeValue.replace(/\s+/g, " "); if (t) out.push(run(t, n.parentElement)); }
+        else if (n.nodeType === 1 && shown(n)) {
+          walk(n);
+          if (n.classList.contains("lbl")) out.push(run(" ", el));
+        }
+      });
+      pseudo("::before"); walk(el); pseudo("::after");
+      if (out.length) out[0].text = out[0].text.replace(/^\s+/, "");
+      return out.filter(r => r.text);
+    }
+    // 글상자: 화면과 글꼴 폭이 조금 달라도 줄이 더 넘어가지 않게 폭을 살짝 넉넉하게 준다
+    function textBox(slide, el, extra) {
+      if (!shown(el)) return;
+      const runs = runsOf(el); if (!runs.length) return;
+      const b = box(el), cs = css(el);
+      const align = cs.textAlign === "center" ? "center" : cs.textAlign === "right" ? "right" : "left";
+      const pad = 0.08;
+      const x = align === "center" ? b.x - pad / 2 : align === "right" ? b.x - pad : b.x;
+      slide.addText(runs, Object.assign({
+        x: x, y: b.y, w: b.w + pad, h: b.h, margin: 0, align: align, valign: "top",
+        lineSpacing: lineH(cs), wrap: true, fit: "none"
+      }, extra || {}));
+    }
+    // 도형 안에 글자가 들어가는 알약·원형 뱃지
+    function shapeText(slide, el, shape, opt) {
+      if (!shown(el)) return;
+      const b = box(el), cs = css(el);
+      const bw = parseFloat(cs.borderTopWidth) || 0;
+      const o = Object.assign({
+        shape: shape, x: b.x, y: b.y, w: b.w, h: b.h, align: "center", valign: "middle",
+        margin: [parseFloat(cs.paddingLeft) * PT, parseFloat(cs.paddingRight) * PT, 0, 0],
+        lineSpacing: lineH(cs), wrap: true, fit: "none"
+      }, opt || {});
+      const fill = hex(cs.backgroundColor); if (fill) o.fill = { color: fill };
+      if (bw) o.line = { color: hex(cs.borderTopColor), width: bw * PT };
+      if (shape === "roundRect") o.rectRadius = Math.min(b.w, b.h) / 2;
+      slide.addText(runsOf(el), o);
+    }
+    function table(slide, el, cols) {
+      if (!shown(el)) return;
+      const cells = Array.from(el.children), b = box(el);
+      const grid = hex(css(el).borderTopColor) || "DADDE2";
+      const rows = [];
+      for (let i = 0; i < cells.length; i += cols) {
+        rows.push(cells.slice(i, i + cols).map(c => {
+          const cs = css(c), r = runsOf(c);
+          const o = Object.assign({ fontSize: parseFloat(cs.fontSize) * PT, color: hex(cs.color) || "000000",
+            align: cs.textAlign === "center" ? "center" : "left", valign: "middle", margin: 0 }, face(cs.fontWeight));
+          const fill = hex(cs.backgroundColor); if (fill) o.fill = { color: fill };
+          return { text: r.map(x => x.text).join(""), options: o };
+        }));
+      }
+      slide.addTable(rows, {
+        x: b.x, y: b.y, w: b.w,
+        colW: cells.slice(0, cols).map(c => box(c).w),
+        rowH: rows.map((_, i) => box(cells[i * cols]).h),
+        border: { type: "solid", pt: 0.75, color: grid }
+      });
+    }
+    function hline(slide, x, y, w, color, dash) {
+      slide.addShape("line", { x: x, y: y, w: w, h: 0, line: { color: color, width: 0.75, dashType: dash ? "dash" : "solid" } });
+    }
+
+    const pptx = new window.PptxGenJS();
+    pptx.defineLayout({ name: "A4P", width: 210 / 25.4, height: 297 / 25.4 });
+    pptx.layout = "A4P";
+    pptx.title = fileName("pptx").replace(/\.pptx$/, "");
+    const slide = pptx.addSlide();
+    const pcs = css(page);
+    slide.background = { color: hex(pcs.backgroundColor) };
+
+    // 배경 장식 원 2개 (종이 밖으로 일부 나가는 것은 원본과 같음)
+    ["::before", "::after"].forEach(p => {
+      const c = css(page, p), w = parseFloat(c.width) * PX, h = parseFloat(c.height) * PX;
+      const pw = page.offsetWidth * PX, ph = page.offsetHeight * PX;
+      const x = c.left !== "auto" ? parseFloat(c.left) * PX : pw - parseFloat(c.right) * PX - w;
+      const y = c.top !== "auto" ? parseFloat(c.top) * PX : ph - parseFloat(c.bottom) * PX - h;
+      slide.addShape("ellipse", { x: x, y: y, w: w, h: h, fill: { color: hex(c.backgroundColor) } });
+    });
+    const card = page.querySelector(".card"), cb = box(card);
+    slide.addShape("roundRect", { x: cb.x, y: cb.y, w: cb.w, h: cb.h, fill: { color: hex(css(card).backgroundColor) },
+      rectRadius: parseFloat(css(card).borderTopLeftRadius) * PX });
+
+    // 머리글
+    textBox(slide, F("pHospital").parentElement);
+    shapeText(slide, F("pName"), "roundRect", { align: "left" });
+    shapeText(slide, F("pTeam"), "roundRect");
+    textBox(slide, F("pSlogan"));
+    textBox(slide, F("pLegend"));
+    const dv = page.querySelector(".m-divider"), db = box(dv);
+    slide.addShape("rect", { x: db.x + db.w * 0.1, y: db.y, w: db.w * 0.8, h: db.h, fill: { color: pcs.getPropertyValue("--line").trim().replace("#", "").toUpperCase() || "7F95B6", transparency: 30 } });
+
+    // 본문: 줄(단계)마다 원형 뱃지 + 단락 블록
+    const rows = Array.from(F("pBody").querySelectorAll(".m-row"));
+    rows.forEach((row, ri) => {
+      const rb = box(row);
+      if (ri < rows.length - 1) hline(slide, rb.x, rb.y + rb.h, rb.w, hex(css(row).borderBottomColor) || "ECEEF1");
+      shapeText(slide, row.querySelector(".m-badge"), "ellipse", { margin: 2 });
+      row.querySelectorAll(".m-block").forEach((blk, bi) => {
+        if (bi > 0) { const bb = box(blk); hline(slide, bb.x, bb.y, bb.w, hex(css(blk).borderTopColor) || "E3E6EA", true); }
+        textBox(slide, blk.querySelector(".m-t"));
+        textBox(slide, blk.querySelector(".m-g"));
+        const s = blk.querySelector(".m-s");
+        if (s) {
+          const sb = box(s), scs = css(s);
+          slide.addShape("rect", { x: sb.x, y: sb.y, w: parseFloat(scs.borderLeftWidth) * PX, h: sb.h, fill: { color: hex(scs.borderLeftColor) } });
+          s.querySelectorAll("p").forEach(p => textBox(slide, p));
+        }
+        textBox(slide, blk.querySelector(".m-tip"));
+        const chk = blk.querySelector(".m-check"); if (chk) table(slide, chk, 6);
+      });
+    });
+    const rv = F("pReview").querySelector(".m-review"); if (rv) table(slide, rv, 2);
+
+    const blob = await pptx.write({ outputType: "blob" });
+    await saveBlob(blob, fileName("pptx"), "PPT를 내려받았습니다. 다른 장표에 붙일 땐 슬라이드에서 Ctrl+A로 전체 선택해 복사하세요.");
+  }
+
+  F("zoom").addEventListener("click", e => {
+    const b = e.target.closest("[data-zoom]"); if (!b) return;
+    const z = b.dataset.zoom;
+    if (z === "in") stepZoom(1); else if (z === "out") stepZoom(-1); else setZoom(z);
+  });
+  F("zoomSel").addEventListener("change", e => setZoom(+e.target.value / 100));
+  F("stageWrap").addEventListener("wheel", e => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault(); stepZoom(e.deltaY < 0 ? 1 : -1);
+  }, { passive: false });
+
+  window.addEventListener("resize", fitStage);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+
+  function nextMonday() {
+    const d = new Date(); const add = (8 - d.getDay()) % 7 || 7; d.setDate(d.getDate() + add);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
