@@ -423,7 +423,10 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
             <label class="f" for="optStart">체크 시작일 <small>일요일 빼고 6일</small></label>
             <input type="date" id="optStart">
             <label class="toggle"><input type="checkbox" id="optReview"> '잘 하고 있는 점 / 노력이 필요한 점' 칸 넣기</label>
+            <label class="toggle"><input type="checkbox" id="optCheckFull"> 응대 멘트·가이드·주의 문구도 같이 넣기</label>
+            <div class="hint">기본은 핵심 행동 지침(굵은 문장)과 체크표만 넣습니다.</div>
           </div>
+          <label class="toggle"><input type="checkbox" id="optShrink"> 내용이 A4 1장을 넘으면 글자 크기 자동으로 줄이기</label>
           <label class="f" for="optFs">글자 크기 <small id="fsVal">100%</small></label>
           <input type="range" id="optFs" min="70" max="120" step="1">
           <div class="form-actions"><button class="btn grow" id="autoFit">A4 1장에 자동 맞춤</button></div>
@@ -509,7 +512,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     theme: "classic", hospital: "OO병원", team: "접수데스크팀",
     slogan: "나의 가치를 높이는 **자연스러운 미소 장착**", emoji: "",
     selected: ["c01", "c02", "c03", "c04"],
-    head: "center", logo: true, merge: true, check: false, review: false, start: nextMonday(), fs: 100,
+    head: "center", logo: true, merge: true, check: false, checkFull: false, shrink: true, review: false, start: nextMonday(), fs: 100,
     src: "전체", groupBy: "category", open: {}, overrides: {}, customs: []
   };
 
@@ -587,7 +590,6 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 
   function renderPreview() {
     document.documentElement.dataset.form = state.theme;
-    page.style.setProperty("--fs", state.fs / 100);
     document.getElementById("pHospital").textContent = state.hospital;
     document.getElementById("pTeam").textContent = state.team;
     document.getElementById("pTeam").hidden = !state.team;
@@ -606,7 +608,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     const body = document.getElementById("pBody");
     if (!items.length) {
       body.innerHTML = '<div class="m-empty"><div>왼쪽 <b>매뉴얼 단락 풀</b>에서<br>넣을 단락을 체크해 주세요.</div></div>';
-      measure();
+      fitFont(); measure();
       return;
     }
     const rows = [];
@@ -616,20 +618,45 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       else rows.push({ category: it.category, items: [it] });
     });
     const days = checkDays();
+    // 셀프체크 표를 넣으면 기본은 핵심 행동 지침만 남긴다 (멘트·가이드·주의 문구 생략)
+    const brief = state.check && !state.checkFull;
     body.innerHTML = rows.map(r => {
       const len = r.category.replace(/\s/g, "").length;
       const cls = len > 7 ? "xlong" : len > 4 ? "long" : "";
       const blocks = r.items.map(it => {
         let h = '<div class="m-block"><div class="m-t">' + labels(emph(it.title)) + "</div>";
-        if (it.guide) h += '<div class="m-g">' + labels(esc(it.guide)) + "</div>";
-        if (it.script && it.script.length) h += '<div class="m-s">' + it.script.map(scriptLine).join("") + "</div>";
-        if (it.tip) h += '<div class="m-tip">' + esc(it.tip) + "</div>";
+        if (it.guide && !brief) h += '<div class="m-g">' + labels(esc(it.guide)) + "</div>";
+        if (it.script && it.script.length && !brief) h += '<div class="m-s">' + it.script.map(scriptLine).join("") + "</div>";
+        if (it.tip && !brief) h += '<div class="m-tip">' + esc(it.tip) + "</div>";
         if (state.check) h += '<div class="m-check">' + days.map(d => "<div>" + d + "</div>").join("") + "<div></div>".repeat(6) + "</div>";
         return h + "</div>";
       }).join("");
       return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '">' + esc(r.category) + '</div></div><div class="m-content">' + blocks + "</div></div>";
     }).join("");
-    measure();
+    fitFont(); measure();
+  }
+
+  // 글자 크기: 슬라이더 값(state.fs)을 기본으로 쓰고, '자동으로 줄이기'가 켜져 있으면
+  // A4 1장에 들어가는 가장 큰 크기(최소 70%)로 낮춘다. 슬라이더 값 자체는 바꾸지 않는다.
+  let effFs = 100;
+  function fitFont() {
+    effFs = state.fs;
+    page.style.setProperty("--fs", effFs / 100);
+    if (state.shrink && overflowRatio() > 1.001) {
+      let lo = 70, hi = state.fs - 1;
+      while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2);
+        page.style.setProperty("--fs", mid / 100);
+        if (overflowRatio() > 1.001) hi = mid - 1; else lo = mid;
+      }
+      effFs = lo;
+      page.style.setProperty("--fs", effFs / 100);
+    }
+    fsLabel();
+  }
+  function fsLabel() {
+    const el = document.getElementById("fsVal");
+    if (el) el.textContent = state.fs + "%" + (effFs < state.fs ? " → 1장에 맞춰 " + effFs + "%" : "");
   }
 
   function checkDays() {
@@ -813,7 +840,9 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     document.getElementById("optStart").value = state.start;
     document.getElementById("checkOpts").hidden = !state.check;
     document.getElementById("optFs").value = state.fs;
-    document.getElementById("fsVal").textContent = state.fs + "%";
+    document.getElementById("optCheckFull").checked = state.checkFull;
+    document.getElementById("optShrink").checked = state.shrink;
+    fsLabel();
     document.getElementById("groupBy").value = state.groupBy;
   }
 
@@ -1001,10 +1030,14 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   F("optCheck").addEventListener("change", e => { state.check = e.target.checked; renderInfo(); update({ panel: false }); });
   F("optReview").addEventListener("change", e => { state.review = e.target.checked; update({ panel: false }); });
   F("optStart").addEventListener("change", e => { state.start = e.target.value; update({ panel: false }); });
-  F("optFs").addEventListener("input", e => { state.fs = +e.target.value; F("fsVal").textContent = state.fs + "%"; update({ panel: false }); });
+  F("optCheckFull").addEventListener("change", e => { state.checkFull = e.target.checked; update({ panel: false }); });
+  F("optShrink").addEventListener("change", e => { state.shrink = e.target.checked; update({ panel: false }); });
+  F("optFs").addEventListener("input", e => { state.fs = +e.target.value; update({ panel: false }); });
+  // 'A4 1장에 자동 맞춤': 115%부터 시작해 1장을 가득 채우는 크기를 슬라이더 값으로 정한다
   F("autoFit").addEventListener("click", () => {
-    state.fs = 115; renderPreview();
-    while (overflowRatio() > 1 && state.fs > 70) { state.fs -= 1; renderPreview(); }
+    const keep = state.shrink;
+    state.fs = 115; state.shrink = true; renderPreview();
+    state.fs = effFs; state.shrink = keep; renderPreview();
     save(); renderInfo();
     if (overflowRatio() > 1) toast("글자를 70%까지 줄여도 A4 1장을 넘습니다. 단락을 몇 개 빼 주세요.");
     else toast("글자 크기를 " + state.fs + "%로 맞췄습니다.");
