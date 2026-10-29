@@ -260,16 +260,15 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .m-legend b { color: var(--primary); }
 .m-divider { height: 2px; background: linear-gradient(90deg, transparent, var(--line), transparent); margin: 1.1em 0 .4em; opacity: .7; }
 .m-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
-.m-row { display: grid; grid-template-columns: 6.4em 1fr; gap: 1.2em; padding: 1em 0; border-bottom: 1px solid var(--rule); }
+.m-row { display: grid; grid-template-columns: 7em 1fr; gap: 1.2em; padding: 1em 0; border-bottom: 1px solid var(--rule); }
 .m-row:last-child { border-bottom: none; }
 .m-badge-col { display: flex; justify-content: center; align-items: flex-start; }
-.m-badge { width: 5.6em; height: 5.6em; border-radius: 50%; border: .2em solid var(--line); background: var(--soft);
+.m-badge { width: 6.4em; height: 6.4em; border-radius: 50%; border: .2em solid var(--line); background: var(--soft);
   display: grid; place-items: center; text-align: center; padding: .4em;
   color: var(--primary); font-weight: 800; font-size: 1em; line-height: 1.5; letter-spacing: -.03em; word-break: keep-all; }
 /* 원 크기는 그대로 두고 안의 글자만 키운다. 긴 단계 이름은 조금 작게 */
-.m-badge .bt { font-size: 1.3em; line-height: 1.15; }
-.m-badge.long .bt { font-size: 1.08em; }
-.m-badge.xlong .bt { font-size: .9em; }
+/* 단계 이름 글자 크기는 fitBadges()가 정한다: 2배에서 시작해 원 안에 들어갈 때까지 줄임 */
+.m-badge .bt { font-size: 2em; line-height: 1.1; }
 .m-content { display: flex; flex-direction: column; gap: .85em; min-width: 0; padding-top: .15em; }
 .m-block + .m-block { padding-top: .85em; border-top: 1px dashed var(--rule-2); }
 .m-t { font-size: 1.1em; font-weight: 700; line-height: 1.5; letter-spacing: -.025em; word-break: keep-all; }
@@ -724,9 +723,27 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       }).join("");
       // 셀프체크 표는 문장마다가 아니라 단계(접점)마다 맨 아래 하나
       const check = state.check ? '<div class="m-check">' + days.map(d => "<div>" + d + "</div>").join("") + "<div></div>".repeat(6) + "</div>" : "";
-      return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '"><span class="bt">' + esc(r.category) + '</span></div></div><div class="m-content">' + blocks + check + "</div></div>";
+      return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '"><span class="bt">' + esc(r.category).replace(/\//g, "/\u200B") + '</span></div></div><div class="m-content">' + blocks + check + "</div></div>";
     }).join("");
+    fitBadges(pg);
     fitFont(pg);
+  }
+
+  // 원형 뱃지 글자: 2배(2em)에서 시작해 글자 상자의 네 모서리가 원 안에 들어올 때까지 줄인다.
+  // 크기가 모두 em 단위라 전체 글자 크기(--fs)가 바뀌어도 결과는 그대로다.
+  function fitBadges(pg) {
+    pg.querySelectorAll(".m-badge .bt").forEach(bt => {
+      const badge = bt.parentElement;
+      const fits = () => {
+        const s = bt.getBoundingClientRect(), r = badge.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rad = r.width / 2 * 0.86;
+        return [[s.left, s.top], [s.right, s.top], [s.left, s.bottom], [s.right, s.bottom]]
+          .every(([x, y]) => Math.hypot(x - cx, y - cy) <= rad);
+      };
+      let size = 2;
+      bt.style.fontSize = size + "em";
+      while (size > 0.7 && !fits()) { size = Math.round((size - 0.05) * 100) / 100; bt.style.fontSize = size + "em"; }
+    });
   }
 
   // 글자 크기: 슬라이더 값(state.fs)을 기본으로 쓰고, '자동으로 줄이기'가 켜져 있으면
@@ -1380,19 +1397,21 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       slide.addText(runs, o);
     }
     // 원형 뱃지: PowerPoint가 줄을 다르게 바꾸지 않도록, 화면에서 실제로 줄이 바뀐 자리에 줄바꿈을 넣는다
+    // (단계 이름의 '/' 뒤에는 화면에서 줄이 바뀔 수 있도록 폭 없는 공백 \u200B가 들어 있다)
     function badgeRuns(el) {
       const bt = el.querySelector(".bt"), node = bt.firstChild, text = bt.textContent;
       const lines = [];
       let lastTop = null, pos = 0;
-      text.split(" ").forEach(word => {
-        const start = text.indexOf(word, pos); pos = start + word.length;
-        const rg = document.createRange(); rg.setStart(node, start); rg.setEnd(node, pos);
+      text.split(/(?<=[ \u200B])/).forEach(tok => {
+        const start = pos, end = pos + tok.replace(/[ \u200B]+$/, "").length; pos += tok.length;
+        if (end <= start) return;
+        const rg = document.createRange(); rg.setStart(node, start); rg.setEnd(node, end);
         const top = Math.round(rg.getBoundingClientRect().top);
-        if (lastTop === null || Math.abs(top - lastTop) > 2) lines.push([word]); else lines[lines.length - 1].push(word);
+        if (lastTop === null || Math.abs(top - lastTop) > 2) lines.push(tok); else lines[lines.length - 1] += tok;
         lastTop = top;
       });
-      return lines.map((ws, i) => {
-        const r = run(ws.join(" "), bt);
+      return lines.map((s, i) => {
+        const r = run(s.replace(/\u200B/g, "").trim(), bt);
         if (i < lines.length - 1) r.options.breakLine = true;
         return r;
       });
@@ -1532,7 +1551,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   }, { passive: false });
 
   window.addEventListener("resize", fitStage);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  // 글꼴이 늦게 들어오면 글자 폭이 달라지므로 뱃지·글자 크기 맞춤을 다시 한다
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderPreview);
 
   function nextMonday() {
     const d = new Date(); const add = (8 - d.getDay()) % 7 || 7; d.setDate(d.getDate() + add);
