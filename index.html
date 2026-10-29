@@ -265,9 +265,11 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .m-badge-col { display: flex; justify-content: center; align-items: flex-start; }
 .m-badge { width: 5.6em; height: 5.6em; border-radius: 50%; border: .2em solid var(--line); background: var(--soft);
   display: grid; place-items: center; text-align: center; padding: .4em;
-  color: var(--primary); font-weight: 800; font-size: 1em; line-height: 1.2; letter-spacing: -.03em; word-break: keep-all; }
-.m-badge.long { font-size: .84em; }
-.m-badge.xlong { font-size: .72em; }
+  color: var(--primary); font-weight: 800; font-size: 1em; line-height: 1.5; letter-spacing: -.03em; word-break: keep-all; }
+/* 원 크기는 그대로 두고 안의 글자만 키운다. 긴 단계 이름은 조금 작게 */
+.m-badge .bt { font-size: 1.3em; line-height: 1.15; }
+.m-badge.long .bt { font-size: 1.08em; }
+.m-badge.xlong .bt { font-size: .9em; }
 .m-content { display: flex; flex-direction: column; gap: .85em; min-width: 0; padding-top: .15em; }
 .m-block + .m-block { padding-top: .85em; border-top: 1px dashed var(--rule-2); }
 .m-t { font-size: 1.1em; font-weight: 700; line-height: 1.5; letter-spacing: -.025em; word-break: keep-all; }
@@ -722,7 +724,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       }).join("");
       // 셀프체크 표는 문장마다가 아니라 단계(접점)마다 맨 아래 하나
       const check = state.check ? '<div class="m-check">' + days.map(d => "<div>" + d + "</div>").join("") + "<div></div>".repeat(6) + "</div>" : "";
-      return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '">' + esc(r.category) + '</div></div><div class="m-content">' + blocks + check + "</div></div>";
+      return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '"><span class="bt">' + esc(r.category) + '</span></div></div><div class="m-content">' + blocks + check + "</div></div>";
     }).join("");
     fitFont(pg);
   }
@@ -1369,12 +1371,31 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       const o = Object.assign({
         shape: shape, x: b.x, y: b.y, w: b.w, h: b.h, align: "center", valign: "middle",
         margin: [parseFloat(cs.paddingLeft) * PT, parseFloat(cs.paddingRight) * PT, 0, 0],
-        lineSpacing: lineH(cs), wrap: true, fit: "none"
+        lineSpacing: lineH(css(el.querySelector(".bt") || el)), wrap: true, fit: "none"   // 원형 뱃지는 안쪽 글자 기준
       }, opt || {});
       const fill = hex(cs.backgroundColor); if (fill) o.fill = { color: fill };
       if (bw) o.line = { color: hex(cs.borderTopColor), width: bw * PT };
       if (shape === "roundRect") o.rectRadius = Math.min(parseFloat(cs.borderTopLeftRadius) * PX || 0, Math.min(b.w, b.h) / 2);
-      slide.addText(runsOf(el), o);
+      const runs = o.runs || runsOf(el); delete o.runs;
+      slide.addText(runs, o);
+    }
+    // 원형 뱃지: PowerPoint가 줄을 다르게 바꾸지 않도록, 화면에서 실제로 줄이 바뀐 자리에 줄바꿈을 넣는다
+    function badgeRuns(el) {
+      const bt = el.querySelector(".bt"), node = bt.firstChild, text = bt.textContent;
+      const lines = [];
+      let lastTop = null, pos = 0;
+      text.split(" ").forEach(word => {
+        const start = text.indexOf(word, pos); pos = start + word.length;
+        const rg = document.createRange(); rg.setStart(node, start); rg.setEnd(node, pos);
+        const top = Math.round(rg.getBoundingClientRect().top);
+        if (lastTop === null || Math.abs(top - lastTop) > 2) lines.push([word]); else lines[lines.length - 1].push(word);
+        lastTop = top;
+      });
+      return lines.map((ws, i) => {
+        const r = run(ws.join(" "), bt);
+        if (i < lines.length - 1) r.options.breakLine = true;
+        return r;
+      });
     }
     function table(slide, el, cols) {
       if (!shown(el)) return;
@@ -1440,7 +1461,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       rows.forEach((row, ri) => {
         const rb = box(row);
         if (ri < rows.length - 1) hline(slide, rb.x, rb.y + rb.h, rb.w, hex(css(row).borderBottomColor) || "ECEEF1");
-        shapeText(slide, row.querySelector(".m-badge"), "ellipse", { margin: 2 });
+        const badge = row.querySelector(".m-badge");
+        shapeText(slide, badge, "ellipse", { margin: 0, wrap: false, runs: badgeRuns(badge) });
         row.querySelectorAll(".m-block").forEach((blk, bi) => {
           if (bi > 0) { const bb = box(blk); hline(slide, bb.x, bb.y, bb.w, hex(css(blk).borderTopColor) || "E3E6EA", true); }
           textBox(slide, blk.querySelector(".m-t"));
