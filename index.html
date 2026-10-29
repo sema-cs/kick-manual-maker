@@ -267,8 +267,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   display: grid; place-items: center; text-align: center; padding: .4em;
   color: var(--primary); font-weight: 800; font-size: 1em; line-height: 1.5; letter-spacing: -.03em; word-break: keep-all; }
 /* 원 크기는 그대로 두고 안의 글자만 키운다. 긴 단계 이름은 조금 작게 */
-/* 단계 이름 글자 크기는 fitBadges()가 정한다: 2배에서 시작해 원 안에 들어갈 때까지 줄임 */
-.m-badge .bt { font-size: 2em; line-height: 1.1; }
+/* 단계 이름 글자 크기는 fitBadges()가 정한다: 1.65배에서 시작해 원 안에 들어갈 때까지 줄임 */
+.m-badge .bt { font-size: 1.65em; line-height: 1.1; }
 .m-content { display: flex; flex-direction: column; gap: .85em; min-width: 0; padding-top: .15em; }
 .m-block + .m-block { padding-top: .85em; border-top: 1px dashed var(--rule-2); }
 .m-t { font-size: 1.1em; font-weight: 700; line-height: 1.5; letter-spacing: -.025em; word-break: keep-all; }
@@ -729,7 +729,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     fitFont(pg);
   }
 
-  // 원형 뱃지 글자: 2배(2em)에서 시작해 글자 상자의 네 모서리가 원 안에 들어올 때까지 줄인다.
+  // 원형 뱃지 글자: 1.65배(1.65em)에서 시작해 글자 상자의 네 모서리가 원 안에 들어올 때까지 줄인다.
   // 크기가 모두 em 단위라 전체 글자 크기(--fs)가 바뀌어도 결과는 그대로다.
   function fitBadges(pg) {
     pg.querySelectorAll(".m-badge .bt").forEach(bt => {
@@ -740,7 +740,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
         return [[s.left, s.top], [s.right, s.top], [s.left, s.bottom], [s.right, s.bottom]]
           .every(([x, y]) => Math.hypot(x - cx, y - cy) <= rad);
       };
-      let size = 2;
+      let size = 1.65;
       bt.style.fontSize = size + "em";
       while (size > 0.7 && !fits()) { size = Math.round((size - 0.05) * 100) / 100; bt.style.fontSize = size + "em"; }
     });
