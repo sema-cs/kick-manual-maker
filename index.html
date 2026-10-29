@@ -294,7 +294,10 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .page[data-head="top"] .m-title .hn, .page[data-head="top"] .m-title .km { color: var(--ink); font-weight: 800; letter-spacing: -.03em; }
 .page[data-head="top"].no-slogan .m-title { padding-right: 3.2em; }
 .page[data-head="top"] .m-team { position: absolute; right: 0; top: 0; margin: 0; border-radius: .45em; padding: .5em 1.5em; font-size: 1.15em; }
-.page[data-head="top"] .m-name { position: static; align-self: flex-end; margin-top: .5em; }
+/* 이름 칸: 가운데형은 제목 줄 오른쪽, 슬로건 위형은 팀명 박스 바로 아래. 제목이 칸과 겹치지 않게 오른쪽을 비운다 */
+.page.has-name .m-title { padding-right: 3.8em; }
+.page[data-head="top"] .m-name { top: 3.6em; }
+.page[data-head="top"].has-name .m-title { padding-right: 3.4em; }
 .page[data-head="top"] .m-legend { margin-top: .5em; }
 .m-empty { flex: 1; display: grid; place-items: center; color: var(--muted); font-size: 1em; text-align: center; line-height: 1.7; }
 
@@ -351,6 +354,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
           <label class="f" for="slogan">핵심 가치 문구(슬로건) <small>**단어** = 강조</small></label>
           <input type="text" id="slogan" placeholder="예: 나의 가치를 높이는 **자연스러운 미소 장착**">
           <select id="sloganPreset" style="margin-top:6px" aria-label="원본 슬로건 선택"></select>
+          <label class="toggle"><input type="checkbox" id="optName"> 이름 적는 칸 넣기 <small style="color:var(--ui-muted)">(병원명·부서명 옆, 선택)</small></label>
           <details class="sub" id="emojiSec">
             <summary>이모지 <small>(선택)</small> <span id="emojiNow"></span></summary>
             <div class="emoji-row" id="emojiRow"></div>
@@ -512,7 +516,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     theme: "classic", hospital: "OO병원", team: "접수데스크팀",
     slogan: "나의 가치를 높이는 **자연스러운 미소 장착**", emoji: "",
     selected: ["c01", "c02", "c03", "c04"],
-    head: "center", logo: true, merge: true, check: false, checkFull: false, shrink: true, review: false, start: nextMonday(), fs: 100,
+    head: "center", logo: true, merge: true, check: false, checkFull: false, shrink: true, nameBox: false, review: false, start: nextMonday(), fs: 100,
     src: "전체", groupBy: "category", open: {}, overrides: {}, customs: []
   };
 
@@ -599,7 +603,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     page.dataset.head = state.head;
     page.classList.toggle("no-slogan", !slogan);
     document.getElementById("pLogo").hidden = !state.logo;
-    document.getElementById("pName").hidden = !state.check;
+    document.getElementById("pName").hidden = !state.nameBox;
+    page.classList.toggle("has-name", !!state.nameBox);
     document.getElementById("pLegend").hidden = !state.check;
     document.getElementById("pReview").innerHTML = state.check && state.review
       ? '<div class="m-review"><div>잘 하고 있는 점</div><div>노력이 필요한 점</div><div></div><div></div></div>' : "";
@@ -834,6 +839,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       DATA.slogans.map((s, i) => '<option value="' + i + '">[' + s.source.join("·") + "] " + esc(plain(s.text)) + " " + s.emoji + "</option>").join("");
     document.getElementById("optMerge").checked = state.merge;
     document.getElementById("optLogo").checked = state.logo;
+    document.getElementById("optName").checked = state.nameBox;
     document.querySelectorAll("#headOpts [data-head]").forEach(b => b.classList.toggle("on", b.dataset.head === state.head));
     document.getElementById("optCheck").checked = state.check;
     document.getElementById("optReview").checked = state.review;
@@ -1027,7 +1033,9 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   });
   F("optLogo").addEventListener("change", e => { state.logo = e.target.checked; update({ panel: false }); });
   F("optMerge").addEventListener("change", e => { state.merge = e.target.checked; update({ panel: false }); });
-  F("optCheck").addEventListener("change", e => { state.check = e.target.checked; renderInfo(); update({ panel: false }); });
+  // 셀프체크 표를 켜면 이름 칸도 같이 켠다 (끄는 건 따로)
+  F("optCheck").addEventListener("change", e => { state.check = e.target.checked; if (state.check) state.nameBox = true; renderInfo(); update({ panel: false }); });
+  F("optName").addEventListener("change", e => { state.nameBox = e.target.checked; update({ panel: false }); });
   F("optReview").addEventListener("change", e => { state.review = e.target.checked; update({ panel: false }); });
   F("optStart").addEventListener("change", e => { state.start = e.target.value; update({ panel: false }); });
   F("optCheckFull").addEventListener("change", e => { state.checkFull = e.target.checked; update({ panel: false }); });
