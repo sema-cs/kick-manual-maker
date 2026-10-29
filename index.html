@@ -453,6 +453,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 
   const DATA = JSON.parse(document.getElementById("manual-data").textContent);
   const BASE = DATA.items;
+  // 저장 키는 예전 이름(빌더) 그대로 둔다. 바꾸면 이미 직접 추가·수정해 둔 단락이 사라진다.
   const STORE_KEY = "kickManualBuilder.v1";
   // 웹 링크(claude.ai)처럼 다른 페이지 안에 들어가 있으면 인쇄·다운로드가 막혀 있다
   const EMBEDDED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
@@ -1012,7 +1013,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   async function saveBlob(blob, name, doneMsg) {
     if (EMBEDDED) {
       const dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
-      if (!dl) { toast("이 화면에서는 파일을 받을 수 없습니다. 공유 드라이브의 kick_manual_builder.html에서 받아 주세요."); return; }
+      if (!dl) { toast("이 화면에서는 파일을 받을 수 없습니다. 공유 드라이브의 kick_manual_maker.html에서 받아 주세요."); return; }
       try { await dl.save({ filename: name, data: blob }); toast(doneMsg); }
       catch (e) { if (!e || e.code !== "declined") toast("파일을 저장하지 못했습니다. (" + ((e && e.code) || "오류") + ")"); }
       return;
