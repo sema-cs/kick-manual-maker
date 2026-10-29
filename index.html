@@ -44,44 +44,44 @@
 }
 
 /* ───────── 디자인 폼(매뉴얼 테마) 토큰 — 종이 위 색 ───────── */
-:root, :root[data-form="classic"] {
+:root, [data-form="classic"] {
   --bg: #E6EBF2; --bg-deco: #D3DCE8;
   --primary: #22385C; --accent: #3D5F93; --line: #7F95B6;
   --soft: #EEF2F8; --badge-text: #FFFFFF; --hl: #2F55A0;
   --ink: #23272F; --muted: #6A7280; --tip: #C0392B;
   --paper: #FFFFFF; --rule: #ECEEF1; --rule-2: #E3E6EA; --grid: #DADDE2; --script: #3F4650; --script-q: #2E343C; --struck: #A3A9B1;
 }
-:root[data-form="beige"] {
+[data-form="beige"] {
   --bg: #EDE3D6; --bg-deco: #E0D1BE;
   --primary: #6E5440; --accent: #A98568; --line: #C3A687;
   --soft: #FAF4EC; --hl: #94704F; --ink: #3A2F27; --muted: #85776B; --tip: #B5523B;
 }
-:root[data-form="rose"] {
+[data-form="rose"] {
   --bg: #F3E2E1; --bg-deco: #E9CBCB;
   --primary: #9E5361; --accent: #CF8F98; --line: #DDA7AD;
   --soft: #FCF3EF; --hl: #B65C6B; --ink: #3D2A2E; --muted: #8A7276; --tip: #C2414F;
 }
-:root[data-form="sage"] {
+[data-form="sage"] {
   --bg: #E2EADF; --bg-deco: #CCDAC8;
   --primary: #355543; --accent: #7F9F86; --line: #9DB8A2;
   --soft: #F3F7EF; --hl: #44705A; --ink: #26322B; --muted: #6C7A71; --tip: #B44A3A;
 }
-:root[data-form="charcoal"] {
+[data-form="charcoal"] {
   --bg: #E9EAEC; --bg-deco: #D9DBDF;
   --primary: #2B2F36; --accent: #6B7280; --line: #A3A8B0;
   --soft: #F3F4F6; --hl: #1F2937; --ink: #23262B; --muted: #6B7078; --tip: #C0392B;
 }
-:root[data-form="teal"] {
+[data-form="teal"] {
   --bg: #E0ECEC; --bg-deco: #C9DEDE;
   --primary: #1F5F66; --accent: #5E9A9F; --line: #8DB8BB;
   --soft: #EEF6F6; --hl: #1F7A82; --ink: #1F2C2E; --muted: #66777A; --tip: #C0392B;
 }
-:root[data-form="lavender"] {
+[data-form="lavender"] {
   --bg: #E9E6F2; --bg-deco: #D8D2EA;
   --primary: #5B4F8A; --accent: #9389BF; --line: #ADA4D1;
   --soft: #F4F2FA; --hl: #6A5AAE; --ink: #2A2638; --muted: #757087; --tip: #C2414F;
 }
-:root[data-form="terracotta"] {
+[data-form="terracotta"] {
   --bg: #F1E6DE; --bg-deco: #E6D2C4;
   --primary: #A0522D; --accent: #C98A63; --line: #D7AE90;
   --soft: #FBF4EE; --hl: #B5562B; --ink: #3A2A22; --muted: #86756A; --tip: #9B2C2C;
@@ -351,7 +351,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     <div class="panel-body">
 
       <div class="pages-bar">
-        <div class="pages-h"><b>페이지</b> <small>팀명·슬로건·단락은 장마다 따로</small><span class="sp"></span>
+        <div class="pages-h"><b>페이지</b> <small>병원명 말고는 장마다 따로 저장</small><span class="sp"></span>
           <button class="btn sm" id="pageAdd">+ 페이지 추가</button></div>
         <div class="chips" id="pageTabs"></div>
         <div class="page-acts" id="pageActs">
@@ -359,6 +359,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
           <button class="icon-btn" data-pact="right" title="뒤로">뒤로 ▶</button>
           <button class="icon-btn" data-pact="dup">이 페이지 복제</button>
           <button class="icon-btn" data-pact="del">이 페이지 삭제</button>
+          <label class="toggle" style="margin:6px 0 0;width:100%"><input type="checkbox" id="optSplit"> 내려받을 때 장마다 따로 파일로</label>
         </div>
       </div>
 
@@ -553,8 +554,11 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     selected: ["c01", "c02", "c03", "c04"],
     head: "center", logo: true, merge: true, check: false, checkFull: false, shrink: true, nameBox: false, review: false, dates: true, start: nextMonday(), fs: 100,
     src: "전체", groupBy: "category", open: {}, overrides: {}, customs: [],
-    pages: null, cur: 0
+    pages: null, cur: 0, split: false
   };
+  // 페이지마다 따로 저장하는 칸 (병원명·단락 풀 보기·직접 추가 단락 등은 공통)
+  const PAGE_KEYS = ["team", "slogan", "emoji", "selected", "theme", "head", "logo", "nameBox", "merge", "check", "checkFull",
+    "review", "dates", "start", "fs", "shrink"];
 
   // 단계(접점) 정렬: 환자가 들어와서(맞이) 나갈 때(수납·배웅)까지. 목록에 없는 단계(직접 추가)는 수납 앞에 둔다.
   const JOURNEY = DATA.journey || [];
@@ -569,7 +573,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   let state = load();
   let editingId = null;
 
-  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function clone(o) { return o === undefined ? undefined : JSON.parse(JSON.stringify(o)); }
   function load() {
     try {
       const raw = localStorage.getItem(STORE_KEY);
@@ -578,9 +582,16 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     return withPages(clone(DEFAULTS));
   }
   // 한 장짜리로 저장돼 있던 예전 상태는 그 내용을 1페이지로 옮긴다
+  // 예전에 저장된 상태도 받아 준다: 한 장짜리는 1페이지로, 페이지에 없는 칸(디자인·옵션)은 그때의 공통 값으로 채운다
   function withPages(s) {
-    if (!Array.isArray(s.pages) || !s.pages.length) s.pages = [{ team: s.team, slogan: s.slogan, emoji: s.emoji, selected: (s.selected || []).slice() }];
+    if (!Array.isArray(s.pages) || !s.pages.length) s.pages = [{}];
+    s.pages = s.pages.map(pg => {
+      const d = {};
+      PAGE_KEYS.forEach(k => { d[k] = clone(pg[k] !== undefined ? pg[k] : s[k]); });
+      return d;
+    });
     if (!(s.cur >= 0 && s.cur < s.pages.length)) s.cur = 0;
+    Object.assign(s, clone(s.pages[s.cur]));
     return s;
   }
   function save() {
@@ -633,9 +644,13 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   }
 
   // ───────── 페이지 (여러 장) ─────────
-  // 팀명·슬로건·이모지·단락은 페이지마다 따로, 나머지(병원명·디자인·옵션)는 모든 페이지 공통.
-  // 지금 고치는 페이지의 값은 state.team/slogan/emoji/selected에 있고, state.pages[state.cur]는 저장할 때 맞춘다.
-  function curPage() { return { team: state.team, slogan: state.slogan, emoji: state.emoji, selected: state.selected.slice() }; }
+  // 병원명만 모든 페이지 공통이고, 나머지(팀명·슬로건·단락·디자인·옵션)는 페이지마다 따로 저장한다.
+  // 지금 고치는 페이지의 값은 state의 같은 이름 칸에 있고, state.pages[state.cur]는 저장할 때 맞춘다.
+  function curPage() {
+    const d = {};
+    PAGE_KEYS.forEach(k => { d[k] = clone(state[k]); });
+    return d;
+  }
   function syncCur() { state.pages[state.cur] = curPage(); }
   function pageData(i) { return i === state.cur ? curPage() : state.pages[i]; }
   function pageEls() { return Array.from(document.getElementById("stage").children); }
@@ -643,7 +658,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 
   // ───────── 미리보기 ─────────
   function renderPreview() {
-    document.documentElement.dataset.form = state.theme;
+    document.documentElement.dataset.form = state.theme;   // 왼쪽 패널 버튼 색은 지금 고치는 페이지 기준
     const stage = document.getElementById("stage"), tpl = document.getElementById("pageTpl");
     const n = state.pages.length;
     while (stage.children.length < n) stage.appendChild(tpl.content.firstElementChild.cloneNode(true));
@@ -667,11 +682,9 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     acts.hidden = n < 2;
     acts.querySelector('[data-pact="left"]').disabled = state.cur === 0;
     acts.querySelector('[data-pact="right"]').disabled = state.cur === n - 1;
+    document.getElementById("optSplit").checked = !!state.split;
   }
-  function loadCur() {
-    const d = clone(state.pages[state.cur]);
-    state.team = d.team || ""; state.slogan = d.slogan || ""; state.emoji = d.emoji || ""; state.selected = d.selected || [];
-  }
+  function loadCur() { Object.assign(state, clone(state.pages[state.cur])); }
   function switchPage(i) {
     if (i === state.cur || i < 0 || i >= state.pages.length) return;
     syncCur(); state.cur = i; loadCur();
@@ -686,31 +699,32 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     const slogan = (emph(d.slogan) + (d.emoji ? " " + esc(d.emoji) : "")).trim();
     q(".m-slogan").innerHTML = slogan;
     q(".m-slogan").hidden = !slogan;
-    pg.dataset.head = state.head;
+    pg.dataset.form = d.theme;
+    pg.dataset.head = d.head;
     pg.classList.toggle("no-slogan", !slogan);
-    q(".m-logo").hidden = !state.logo;
-    q(".m-name").hidden = !state.nameBox;
-    pg.classList.toggle("has-name", !!state.nameBox);
-    q(".m-legend").hidden = !state.check;
-    q(".p-review").innerHTML = state.check && state.review
+    q(".m-logo").hidden = !d.logo;
+    q(".m-name").hidden = !d.nameBox;
+    pg.classList.toggle("has-name", !!d.nameBox);
+    q(".m-legend").hidden = !d.check;
+    q(".p-review").innerHTML = d.check && d.review
       ? '<div class="m-review"><div>잘 하고 있는 점</div><div>노력이 필요한 점</div><div></div><div></div></div>' : "";
 
     const items = d.selected.map(getItem).filter(Boolean);
     const body = q(".m-body");
     if (!items.length) {
       body.innerHTML = '<div class="m-empty"><div>왼쪽 <b>매뉴얼 단락 풀</b>에서<br>넣을 단락을 체크해 주세요.</div></div>';
-      fitFont(pg);
+      fitFont(pg, d);
       return;
     }
     const rows = [];
     items.forEach(it => {
       const last = rows[rows.length - 1];
-      if (state.merge && last && last.category === it.category) last.items.push(it);
+      if (d.merge && last && last.category === it.category) last.items.push(it);
       else rows.push({ category: it.category, items: [it] });
     });
-    const days = state.dates ? checkDays() : Array(6).fill("&nbsp;");   // 날짜를 빼면 맨 윗줄은 손으로 적는 빈칸
+    const days = d.dates ? checkDays(d.start) : Array(6).fill("&nbsp;");   // 날짜를 빼면 맨 윗줄은 손으로 적는 빈칸
     // 셀프체크 표를 넣으면 기본은 핵심 행동 지침만 남긴다 (멘트·가이드·주의 문구 생략)
-    const brief = state.check && !state.checkFull;
+    const brief = d.check && !d.checkFull;
     body.innerHTML = rows.map(r => {
       const len = r.category.replace(/\s/g, "").length;
       const cls = len > 7 ? "xlong" : len > 4 ? "long" : "";
@@ -722,11 +736,11 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
         return h + "</div>";
       }).join("");
       // 셀프체크 표는 문장마다가 아니라 단계(접점)마다 맨 아래 하나
-      const check = state.check ? '<div class="m-check">' + days.map(d => "<div>" + d + "</div>").join("") + "<div></div>".repeat(6) + "</div>" : "";
+      const check = d.check ? '<div class="m-check">' + days.map(d => "<div>" + d + "</div>").join("") + "<div></div>".repeat(6) + "</div>" : "";
       return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '"><span class="bt">' + esc(r.category).replace(/\//g, "/\u200B") + '</span></div></div><div class="m-content">' + blocks + check + "</div></div>";
     }).join("");
     fitBadges(pg);
-    fitFont(pg);
+    fitFont(pg, d);
   }
 
   // 원형 뱃지 글자: 1.65배(1.65em)에서 시작해 글자 상자의 네 모서리가 원 안에 들어올 때까지 줄인다.
@@ -748,11 +762,11 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 
   // 글자 크기: 슬라이더 값(state.fs)을 기본으로 쓰고, '자동으로 줄이기'가 켜져 있으면
   // 그 페이지가 A4 1장에 들어가는 가장 큰 크기(최소 70%)로 낮춘다. 슬라이더 값 자체는 바꾸지 않는다.
-  function fitFont(pg) {
-    let eff = state.fs;
+  function fitFont(pg, d) {
+    let eff = d.fs;
     pg.style.setProperty("--fs", eff / 100);
-    if (state.shrink && overflowRatio(pg) > 1.001) {
-      let lo = 70, hi = state.fs - 1;
+    if (d.shrink && overflowRatio(pg) > 1.001) {
+      let lo = 70, hi = d.fs - 1;
       while (lo < hi) {
         const mid = Math.ceil((lo + hi) / 2);
         pg.style.setProperty("--fs", mid / 100);
@@ -769,9 +783,9 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     if (el) el.textContent = state.fs + "%" + (eff < state.fs ? " → 1장에 맞춰 " + eff + "%" : "");
   }
 
-  function checkDays() {
+  function checkDays(start) {
     const names = ["일", "월", "화", "수", "목", "금", "토"];
-    const d = state.start ? new Date(state.start + "T00:00:00") : null;
+    const d = start ? new Date(start + "T00:00:00") : null;
     if (!d || isNaN(d)) return ["월", "화", "수", "목", "금", "토"];
     const out = [];
     for (let i = 0; out.length < 6; i++) {
@@ -1165,9 +1179,9 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   F("autoFit").addEventListener("click", () => {
     const keep = state.shrink;
     state.fs = 115; state.shrink = true; renderPreview();
-    state.fs = Math.min.apply(null, pageEls().map(pg => +pg.dataset.fs)); state.shrink = keep; renderPreview();
+    state.fs = +curEl().dataset.fs; state.shrink = keep; renderPreview();
     save(); renderInfo();
-    if (overPages().length) toast("글자를 70%까지 줄여도 A4 1장을 넘습니다. 단락을 몇 개 빼 주세요.");
+    if (overflowRatio() > 1.001) toast("글자를 70%까지 줄여도 A4 1장을 넘습니다. 단락을 몇 개 빼 주세요.");
     else toast("글자 크기를 " + state.fs + "%로 맞췄습니다.");
   });
 
@@ -1203,9 +1217,10 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     withUndo("모든 선택과 입력값을 비웠습니다.", () => {
       state = Object.assign(clone(DEFAULTS), {
         hospital: "", team: "", slogan: "", emoji: "", selected: [],
-        pages: [{ team: "", slogan: "", emoji: "", selected: [] }], cur: 0,
+        pages: null, cur: 0, split: state.split,
         overrides: state.overrides, customs: state.customs
       });
+      withPages(state);
     });
     F("search").value = "";
     save(); clearForm(); renderAll();
@@ -1264,12 +1279,21 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     });
   }
 
-  function fileName(ext) {
+  // i를 주면 그 페이지 한 장짜리 파일 이름, 안 주면 전체 파일 이름
+  function fileName(ext, i) {
     const d = new Date();
     const day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-    const n = state.pages.length;
-    const name = [state.hospital, n > 1 ? "" : state.team, "킥매뉴얼", n > 1 ? n + "장" : "", day].map(s => String(s || "").trim()).filter(Boolean).join("_");
+    const n = state.pages.length, one = i !== undefined || n === 1;
+    const team = one ? pageData(i === undefined ? 0 : i).team : "";
+    const name = [state.hospital, team, "킥매뉴얼", one ? (n > 1 && !team ? (i + 1) + "장" : "") : n + "장", day]
+      .map(s => String(s || "").trim()).filter(Boolean).join("_");
     return name.replace(/[\\/:*?"<>|]/g, "") + "." + ext;
+  }
+  // 내려받을 파일 묶음: '장마다 따로'면 페이지마다 한 파일, 아니면 전체 한 파일
+  function exportGroups(ext) {
+    const els = pageEls();
+    if (state.split && els.length > 1) return els.map((el, i) => ({ els: [el], name: fileName(ext, i) }));
+    return [{ els: els, name: fileName(ext) }];
   }
 
   // 웹 링크(claude.ai) 안에서는 downloads 기능으로, 파일로 열었을 땐 브라우저 다운로드로 저장한다
@@ -1291,8 +1315,10 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   async function exportPdf() {
     await Promise.all([loadLib("canvas"), loadLib("pdf")]);
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const groups = exportGroups("pdf");
+    for (const g of groups) {
     const pdf = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    const pages = pageEls();
+    const pages = g.els;
     for (let i = 0; i < pages.length; i++) {
       const canvas = await window.html2canvas(pages[i], {
         scale: 3, backgroundColor: null, logging: false,
@@ -1304,7 +1330,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       if (i > 0) pdf.addPage();
       pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 210, 297);
     }
-    await saveBlob(pdf.output("blob"), fileName("pdf"), "PDF를 내려받았습니다.");
+    await saveBlob(pdf.output("blob"), g.name, groups.length > 1 ? "PDF " + groups.length + "개를 내려받았습니다." : "PDF를 내려받았습니다.");
+    }
   }
 
   // PPT: 미리보기에 그려진 위치를 재서 글상자·도형·표로 옮긴다. 그림이 아니라서 PowerPoint에서 바로 고칠 수 있다.
@@ -1441,12 +1468,18 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       slide.addShape("line", { x: x, y: y, w: w, h: 0, line: { color: color, width: 0.75, dashType: dash ? "dash" : "solid" } });
     }
 
-    const pptx = new window.PptxGenJS();
-    pptx.defineLayout({ name: "A4P", width: 210 / 25.4, height: 297 / 25.4 });
-    pptx.layout = "A4P";
-    pptx.title = fileName("pptx").replace(/\.pptx$/, "");
-    // 페이지마다 슬라이드 한 장
-    pageEls().forEach(page => { base = page.getBoundingClientRect(); drawSlide(page); });
+    let pptx = null;
+    const groups = exportGroups("pptx");
+    for (const g of groups) {
+      pptx = new window.PptxGenJS();
+      pptx.defineLayout({ name: "A4P", width: 210 / 25.4, height: 297 / 25.4 });
+      pptx.layout = "A4P";
+      pptx.title = g.name.replace(/\.pptx$/, "");
+      // 페이지마다 슬라이드 한 장
+      g.els.forEach(page => { base = page.getBoundingClientRect(); drawSlide(page); });
+      const blob = await pptx.write({ outputType: "blob" });
+      await saveBlob(blob, g.name, (groups.length > 1 ? "PPT " + groups.length + "개를" : "PPT를") + " 내려받았습니다. 다른 장표에 붙일 땐 슬라이드에서 Ctrl+A로 전체 선택해 복사하세요.");
+    }
     function drawSlide(page) {
       const slide = pptx.addSlide();
       const pcs = css(page);
@@ -1499,8 +1532,6 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       const rv = page.querySelector(".p-review").querySelector(".m-review"); if (rv) table(slide, rv, 2);
     }
 
-    const blob = await pptx.write({ outputType: "blob" });
-    await saveBlob(blob, fileName("pptx"), "PPT를 내려받았습니다. 다른 장표에 붙일 땐 슬라이드에서 Ctrl+A로 전체 선택해 복사하세요.");
   }
 
   // ───────── 페이지 추가·이동·복제·삭제 ─────────
@@ -1510,10 +1541,11 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   F("stage").addEventListener("click", e => {
     const pg = e.target.closest(".page"); if (pg) switchPage(+pg.dataset.index);
   });
+  F("optSplit").addEventListener("change", e => { state.split = e.target.checked; save(); });
   F("pageAdd").addEventListener("click", () => {
-    // 새 페이지는 지금 페이지의 슬로건·이모지를 이어받고, 팀명·단락은 비운다
+    // 새 페이지는 지금 페이지의 디자인·옵션·슬로건을 이어받고, 팀명·단락은 비운다. 그 뒤로는 서로 따로 바뀐다
     syncCur();
-    state.pages.push({ team: "", slogan: state.slogan, emoji: state.emoji, selected: [] });
+    state.pages.push(Object.assign(curPage(), { team: "", selected: [] }));
     switchPage(state.pages.length - 1);
     toast(state.pages.length + "번째 페이지를 추가했습니다. 팀명과 단락을 넣어 주세요.");
   });
