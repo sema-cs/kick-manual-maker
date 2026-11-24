@@ -828,7 +828,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       const len = r.category.replace(/\s/g, "").length;
       const cls = len > 7 ? "xlong" : len > 4 ? "long" : "";
       const blocks = r.items.map(it => {
-        let h = '<div class="m-block"><div class="m-t">' + labels(emph(it.title)) + "</div>";
+        // 핵심 행동 지침은 입력란에서 친 줄바꿈(엔터)을 그대로 살린다
+        let h = '<div class="m-block"><div class="m-t">' + labels(emph(it.title)).replace(/\r?\n/g, "<br>") + "</div>";
         if (it.guide && !brief) h += '<div class="m-g">' + labels(esc(it.guide)) + "</div>";
         if (it.script && it.script.length && !brief) h += '<div class="m-s">' + it.script.map(scriptLine).join("") + "</div>";
         if (it.tip && !brief) h += '<div class="m-tip">' + esc(it.tip) + "</div>";
@@ -1552,6 +1553,10 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       };
       const walk = node => node.childNodes.forEach(n => {
         if (n.nodeType === 3) { const t = n.nodeValue.replace(/\s+/g, " "); if (t) out.push(run(t, n.parentElement)); }
+        else if (n.nodeName === "BR") {   // 화면의 강제 줄바꿈 → PowerPoint에서도 같은 자리에서 줄을 바꾼다
+          const last = out[out.length - 1];
+          if (last) { last.text = last.text.replace(/\s+$/, ""); last.options.breakLine = true; }
+        }
         else if (n.nodeType === 1 && shown(n)) {
           walk(n);
           if (n.classList.contains("lbl")) out.push(run(" ", el));
