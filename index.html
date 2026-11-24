@@ -287,6 +287,29 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 .m-s .mk { font-size: .85em; margin-right: .25em; }
 .m-tip { margin-top: .4em; font-size: .86em; color: var(--tip); font-weight: 600; line-height: 1.5; word-break: keep-all; }
 .m-tip::before { content: "※ "; }
+/* 미리보기 직접 편집 (2026-11-24) — 지금 고치는 장에서만. 내보내기(body.exporting)·인쇄 때는 숨긴다 */
+.m-block { position: relative; }
+.page.editable [data-field] { cursor: text; border-radius: .25em; }
+.page.editable [data-field]:hover { background: rgba(70, 110, 190, .08); outline: 1px dashed rgba(70, 110, 190, .5); outline-offset: .12em; }
+.m-edit { display: block; width: 100%; box-sizing: border-box; font: inherit; color: inherit; letter-spacing: inherit; line-height: inherit;
+  min-height: 0; background: #FFFFFF; border: 1px solid var(--primary); border-radius: .3em; padding: .1em .3em; margin: -.1em 0; resize: none; overflow: hidden;
+  outline: none; box-shadow: 0 0 0 .2em rgba(70, 110, 190, .18); }
+.edit-dot { position: absolute; left: -.75em; top: .6em; width: .4em; height: .4em; border-radius: 50%; background: var(--hl); }
+.edit-reset { position: absolute; right: 0; top: -.35em; z-index: 1; font: inherit; font-size: .72em; font-weight: 600; color: var(--primary);
+  background: var(--soft); border: 1px solid var(--line); border-radius: 99px; padding: .1em .75em; cursor: pointer; opacity: 0; transition: opacity .12s; }
+.page.editable .m-block:hover .edit-reset, .edit-reset:focus-visible { opacity: 1; }
+.page:not(.editable) .edit-reset { display: none; }
+.m-handle { position: absolute; left: -1.25em; top: .15em; width: 1em; height: 1.4em; display: flex; align-items: center; justify-content: center;
+  font-size: .95em; line-height: 1; color: var(--muted); cursor: grab; opacity: 0; border-radius: .25em; user-select: none; transition: opacity .12s; }
+.page.editable .m-block:hover .m-handle { opacity: .9; }
+.page.editable .m-block:hover .edit-dot { opacity: 0; }
+.page:not(.editable) .m-handle { display: none; }
+.page.editable .m-badge { cursor: grab; }
+.m-drop { position: absolute; height: 0; border-top: 2.5px solid var(--hl); pointer-events: none; z-index: 3; }
+.m-drop::before { content: ""; position: absolute; left: -.35em; top: -.38em; width: .55em; height: .55em; border-radius: 50%; background: var(--hl); }
+.dragging-src { opacity: .4; }
+body.exporting .edit-dot, body.exporting .edit-reset, body.exporting .m-handle, body.exporting .m-drop { display: none !important; }
+body.exporting .page [data-field] { outline: none !important; background: none !important; }
 .m-check { margin-top: .55em; display: grid; grid-template-columns: repeat(6, 1fr); border: 1px solid var(--grid); border-radius: .45em; overflow: hidden; font-size: .88em; text-align: center; }
 .m-content > .m-check { margin-top: 0; }
 .m-check div { padding: .4em 0; border-left: 1px solid var(--grid); }
@@ -339,6 +362,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   .stage { transform: none !important; width: auto !important; height: auto !important; display: block; }
   .page { box-shadow: none; width: 210mm; height: 296.9mm; break-after: avoid; outline: none !important; }
   .page + .page { break-before: page; }
+  .edit-dot, .edit-reset, .m-handle, .m-drop { display: none !important; }
+  .page [data-field] { outline: none !important; background: none !important; }
 }
 @media (max-width: 900px) {
   html, body { height: auto; }
@@ -578,12 +603,12 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     slogan: "나의 가치를 높이는 **자연스러운 미소 장착**", emoji: "",
     selected: ["c01", "c02", "c03", "c04"],
     head: "center", logo: true, merge: true, check: false, checkFull: false, shrink: true, nameBox: false, review: false, dates: true, start: nextMonday(), fs: 100,
-    src: "전체", groupBy: "category", open: {}, overrides: {}, customs: [],
+    src: "전체", groupBy: "category", open: {}, overrides: {}, customs: [], edits: {},
     pages: null, cur: 0, split: false
   };
   // 페이지마다 따로 저장하는 칸 (병원명·단락 풀 보기·직접 추가 단락 등은 공통)
   const PAGE_KEYS = ["team", "slogan", "emoji", "selected", "theme", "head", "logo", "nameBox", "merge", "check", "checkFull",
-    "review", "dates", "start", "fs", "shrink"];
+    "review", "dates", "start", "fs", "shrink", "edits"];
 
   // 단계(접점) 정렬: 환자가 들어와서(맞이) 나갈 때(수납·배웅)까지. 목록에 없는 단계(직접 추가)는 수납 앞에 둔다.
   const JOURNEY = DATA.journey || [];
@@ -716,11 +741,45 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   }
 
   // ───────── 데이터 조회 ─────────
+  // 단락 풀 = 원본 단락 + 직접 추가 단락. 원본 문구 수정은 장(페이지)마다 edits에 따로 둔다 (2026-11-24 사용자 결정:
+  // 병원별 예외 수정이 다른 장·다른 병원 작업에 섞이지 않게). 예전의 브라우저 전체 수정본(overrides)은 migrateOverrides로 옮긴다.
   function allItems() {
-    return BASE.map(it => state.overrides[it.id] ? Object.assign({}, it, state.overrides[it.id], { edited: true }) : it)
-      .concat(state.customs.map(c => Object.assign({ custom: true }, c)));
+    return BASE.concat(state.customs.map(c => Object.assign({ custom: true }, c)));
   }
   function getItem(id) { return allItems().find(it => it.id === id); }
+  // 가이드는 화면에서 ( )로 감싸 보이므로, 입력이 통째로 괄호에 싸여 있으면 그 한 쌍만 벗긴다 ("(필수) 안내"는 그대로)
+  function unwrapParen(v) { return String(v || "").trim().replace(/^\(\s*([^()]*?)\s*\)$/, "$1"); }
+  const EDIT_FIELDS = ["category", "dept", "title", "guide", "script", "tip"];
+  function itemFor(id, edits) {
+    const it = getItem(id); if (!it) return null;
+    const e = edits && edits[id];
+    return e ? Object.assign({}, it, e, { pageEdited: true }) : it;
+  }
+  // 지금 장의 단락 하나를 고친다. 원본과 같아진 칸은 지우고, 다 같아지면 수정 표시도 없앤다
+  function setEdit(id, patch) {
+    const base = getItem(id); if (!base) return;
+    const cur = Object.assign({}, state.edits[id] || {}, patch);
+    Object.keys(cur).forEach(k => {
+      if (!EDIT_FIELDS.includes(k)) { delete cur[k]; return; }
+      const b0 = base[k] === undefined ? (k === "script" ? [] : "") : base[k];
+      if (JSON.stringify(cur[k] === undefined ? "" : cur[k]) === JSON.stringify(b0)) delete cur[k];
+    });
+    if (Object.keys(cur).length) state.edits[id] = cur; else delete state.edits[id];
+  }
+  function clearEdit(id) { delete state.edits[id]; }
+  // 예전 브라우저 전체 수정본 → '내 수정본' 직접 추가 단락으로 보존(원본은 원래 문구로 돌아감). 옮긴 개수를 돌려준다
+  function migrateOverrides(s) {
+    const ov = s.overrides || {};
+    let n = 0;
+    Object.keys(ov).forEach((id, i) => {
+      const base = BASE.find(it => it.id === id); if (!base) return;
+      const c = Object.assign({}, base, ov[id], { id: "u" + Date.now().toString(36) + i, source: ["직접 추가"], dept: "내 수정본" });
+      delete c.edited; delete c.custom; delete c.category_orig;
+      s.customs = s.customs || []; s.customs.push(c); n++;
+    });
+    s.overrides = {};
+    return n;
+  }
 
   // ───────── 텍스트 렌더링 ─────────
   function esc(s) {
@@ -730,7 +789,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   function plain(s) { return String(s || "").replace(/\*\*/g, ""); }
   function labels(html) { return html.replace(/\[([^\]]+)\]/g, '<span class="lbl">$1</span>'); }
 
-  function scriptLine(line) {
+  function scriptLine(line, i) {
     let rest = String(line).trim(), pre = "", mark = "";
     if (rest.startsWith("❌")) { mark = "bad"; rest = rest.slice(1).trim(); }
     else if (rest.startsWith("⭕")) { mark = "good"; rest = rest.slice(1).trim(); }
@@ -739,7 +798,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     while ((m = rest.match(/^\(([^)]+)\)\s*/))) { pre += '<span class="dir">(' + esc(m[1]) + ")</span> "; rest = rest.slice(m[0].length); }
     const body = esc(rest).replace(/\(([^)]+)\)/g, '<span class="dir">($1)</span>');
     const markHtml = mark === "bad" ? '<span class="mk">❌</span>' : mark === "good" ? '<span class="mk">⭕</span>' : "";
-    return '<p class="' + (mark === "bad" ? "bad" : "") + '">' + markHtml + pre + '<span class="q">“' + body + "”</span></p>";
+    const at = typeof i === "number" ? ' data-field="script" data-line="' + i + '"' : "";
+    return '<p class="' + (mark === "bad" ? "bad" : "") + '"' + at + ">" + markHtml + pre + '<span class="q">“' + body + "”</span></p>";
   }
 
   // ───────── 페이지 (여러 장) ─────────
@@ -765,6 +825,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     pageEls().forEach((pg, i) => {
       pg.dataset.index = i;
       pg.classList.toggle("cur", i === state.cur && n > 1);
+      pg.classList.toggle("editable", i === state.cur);
       fillPage(pg, pageData(i));
     });
     measure();
@@ -808,7 +869,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     q(".p-review").innerHTML = d.check && d.review
       ? '<div class="m-review"><div>잘 하고 있는 점</div><div>노력이 필요한 점</div><div></div><div></div></div>' : "";
 
-    const items = d.selected.map(getItem).filter(Boolean);
+    const items = d.selected.map(id => itemFor(id, d.edits)).filter(Boolean);
     const body = q(".m-body");
     if (!items.length) {
       body.innerHTML = '<div class="m-empty"><div>왼쪽 <b>매뉴얼 단락 풀</b>에서<br>넣을 단락을 체크해 주세요.</div></div>';
@@ -829,17 +890,20 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       const cls = len > 7 ? "xlong" : len > 4 ? "long" : "";
       const blocks = r.items.map(it => {
         // 핵심 행동 지침은 입력란에서 친 줄바꿈(엔터)을 그대로 살린다
-        let h = '<div class="m-block"><div class="m-t">' + labels(emph(it.title)).replace(/\r?\n/g, "<br>") + "</div>";
-        if (it.guide && !brief) h += '<div class="m-g">' + labels(esc(it.guide)) + "</div>";
-        if (it.script && it.script.length && !brief) h += '<div class="m-s">' + it.script.map(scriptLine).join("") + "</div>";
-        if (it.tip && !brief) h += '<div class="m-tip">' + esc(it.tip) + "</div>";
+        let h = '<div class="m-block" data-id="' + esc(it.id) + '">' +
+          '<span class="m-handle" draggable="true" data-drag="block" title="끌어서 이 단락만 옮기기">⠿</span>' +
+          (it.pageEdited ? '<span class="edit-dot" title="이 장에서 고친 단락"></span><button type="button" class="edit-reset" data-reset="' + esc(it.id) + '">원본으로</button>' : "") +
+          '<div class="m-t" data-field="title">' + labels(emph(it.title)).replace(/\r?\n/g, "<br>") + "</div>";
+        if (it.guide && !brief) h += '<div class="m-g" data-field="guide">' + labels(esc(it.guide)) + "</div>";
+        if (it.script && it.script.length && !brief) h += '<div class="m-s">' + it.script.map((l, i) => scriptLine(l, i)).join("") + "</div>";
+        if (it.tip && !brief) h += '<div class="m-tip" data-field="tip">' + esc(it.tip) + "</div>";
         return h + "</div>";
       }).join("");
       // 셀프체크 표는 문장마다가 아니라 단계(접점)마다 맨 아래 하나
       const check = !d.check ? "" : days
         ? '<div class="m-check">' + days.map(x => "<div>" + x + "</div>").join("") + "<div></div>".repeat(6) + "</div>"
         : '<div class="m-check blank"><div>날짜</div>' + '<div class="ph">/</div>'.repeat(6) + "<div>이름</div>" + "<div></div>".repeat(6) + "</div>";
-      return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '"><span class="bt">' + esc(r.category).replace(/\//g, "/\u200B") + '</span></div></div><div class="m-content">' + blocks + check + "</div></div>";
+      return '<div class="m-row"><div class="m-badge-col"><div class="m-badge ' + cls + '" draggable="true" data-drag="row" title="끌어서 이 단계 묶음을 옮기기"><span class="bt">' + esc(r.category).replace(/\//g, "/\u200B") + '</span></div></div><div class="m-content">' + blocks + check + "</div></div>";
     }).join("");
     fitBadges(pg);
     fitFont(pg, d);
@@ -984,7 +1048,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 
   function renderSelected() {
     const list = document.getElementById("selList");
-    const items = state.selected.map(getItem).filter(Boolean);
+    const items = state.selected.map(id => itemFor(id, state.edits)).filter(Boolean);
     document.getElementById("selCount").textContent = items.length;
     if (!items.length) { list.innerHTML = '<li class="empty" style="border:none;background:none;cursor:default">아직 선택된 단락이 없습니다.</li>'; return; }
     list.innerHTML = items.map((it, i) =>
@@ -1057,7 +1121,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
         arr.map(it => {
           const tags = (key !== "category" ? '<span class="tag cat">' + esc(it.category) + "</span>" : "") +
             (it.custom ? '<span class="tag custom">직접 추가</span>' : "") +
-            (it.edited ? '<span class="tag custom">수정됨</span>' : "");
+            (state.edits[it.id] ? '<span class="tag custom">이 장 수정</span>' : "");
           return '<div class="pool-item"><input type="checkbox" data-pick="' + it.id + '" aria-label="' + esc(plain(it.title)) + '" ' + (sel.has(it.id) ? "checked" : "") + ">" +
             '<div class="body" data-toggle="' + it.id + '"><div class="t">' + emph(it.title) + "</div>" + preview(it) + (tags ? '<div class="meta">' + tags + "</div>" : "") + "</div>" +
             '<button class="icon-btn" data-edit="' + it.id + '" aria-label="수정">✎</button></div>';
@@ -1207,7 +1271,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     save(); renderPool();
   });
   F("sortJourney").addEventListener("click", () => {
-    const items = state.selected.map(getItem).filter(Boolean);
+    const items = state.selected.map(id => itemFor(id, state.edits)).filter(Boolean);
     if (items.length < 2) return;
     withUndo("선택한 단락을 맞이부터 수납·배웅까지 접점 순서로 정렬했습니다.", () => {
       state.selected = items.slice().sort(byJourney).map(it => it.id);
@@ -1223,7 +1287,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   function formValue() {
     return {
       category: F("fCat").value.trim(), dept: F("fDept").value.trim() || "직접 추가",
-      title: F("fTitle").value.trim(), guide: F("fGuide").value.trim().replace(/^\(\s*|\s*\)$/g, ""),
+      title: F("fTitle").value.trim(), guide: unwrapParen(F("fGuide").value),
       script: F("fScript").value.split("\n").map(s => s.trim().replace(/^[“"]|[”"]$/g, "")).filter(Boolean),
       tip: F("fTip").value.trim()
     };
@@ -1235,12 +1299,12 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     F("fReset").hidden = true; F("fCancel").hidden = true; F("fErr").hidden = true;
   }
   function openEdit(id) {
-    const it = getItem(id); if (!it) return;
+    const it = itemFor(id, state.edits); if (!it) return;
     editingId = id;
     F("fCat").value = it.category; F("fDept").value = it.dept; F("fTitle").value = it.title;
     F("fGuide").value = it.guide || ""; F("fScript").value = (it.script || []).join("\n"); F("fTip").value = it.tip || "";
     F("formTitle").textContent = "단락 수정 · " + it.category; F("fSave").textContent = "수정 저장";
-    F("fReset").hidden = !it.edited; F("fCancel").hidden = false; F("fErr").hidden = true;
+    F("fReset").hidden = !state.edits[id]; F("fCancel").hidden = false; F("fErr").hidden = true;
     F("formSec").open = true; F("formSec").scrollIntoView({ behavior: "smooth", block: "start" });
   }
   F("fSave").addEventListener("click", () => {
@@ -1248,8 +1312,8 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     if (!v.category || !v.title) { F("fErr").hidden = false; return; }
     if (editingId) {
       const c = state.customs.find(x => x.id === editingId);
-      if (c) Object.assign(c, v); else state.overrides[editingId] = v;
-      toast("단락을 수정했습니다.");
+      if (c) { Object.assign(c, v); clearEdit(editingId); toast("직접 추가한 단락을 수정했습니다."); }
+      else { setEdit(editingId, v); toast("이 장의 단락만 수정했습니다. (단락 풀 원본과 다른 장은 그대로)"); }
     } else {
       const id = "u" + Date.now().toString(36);
       state.customs.push(Object.assign({ id: id, source: ["직접 추가"] }, v));
@@ -1258,7 +1322,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     }
     clearForm(); update();
   });
-  F("fReset").addEventListener("click", () => { if (editingId) delete state.overrides[editingId]; clearForm(); update(); toast("원본 문구로 되돌렸습니다."); });
+  F("fReset").addEventListener("click", () => { if (editingId) clearEdit(editingId); clearForm(); update(); toast("이 장의 단락을 원본 문구로 되돌렸습니다."); });
   F("fCancel").addEventListener("click", clearForm);
 
   // ───────── 옵션 ─────────
@@ -1288,7 +1352,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   });
 
   F("exportJson").addEventListener("click", () => {
-    const out = { exported: new Date().toISOString().slice(0, 10), overrides: state.overrides, customs: state.customs };
+    const out = { exported: new Date().toISOString().slice(0, 10), customs: state.customs };
     const text = JSON.stringify(out, null, 2);
     if (EMBEDDED) {
       navigator.clipboard.writeText(text)
@@ -1306,9 +1370,9 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     const file = e.target.files[0]; if (!file) return;
     file.text().then(txt => {
       const d = JSON.parse(txt);
-      Object.assign(state.overrides, d.overrides || {});
       let n = 0;
       (d.customs || []).forEach(c => { if (!state.customs.some(x => x.id === c.id)) { state.customs.push(c); n++; } });
+      n += migrateOverrides({ overrides: d.overrides || {}, customs: state.customs });
       update(); toast("단락을 불러왔습니다. (새 단락 " + n + "개)");
     }).catch(() => toast("JSON 파일을 읽지 못했습니다. 내보내기로 만든 파일인지 확인해 주세요."));
     e.target.value = "";
@@ -1322,14 +1386,12 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     syncCur();
     const ids = new Set();
     state.pages.forEach(p => (p.selected || []).forEach(id => ids.add(id)));
-    const overrides = {};
-    Object.keys(state.overrides).forEach(id => { if (ids.has(id)) overrides[id] = state.overrides[id]; });
     const d = new Date();
     return {
-      app: WORK_APP, kind: "work", version: 1,
+      app: WORK_APP, kind: "work", version: 2,
       saved: d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"),
       hospital: state.hospital, pages: clone(state.pages), split: state.split,
-      overrides: overrides, customs: state.customs.filter(c => ids.has(c.id))
+      customs: state.customs.filter(c => ids.has(c.id))
     };
   }
   F("workSave").addEventListener("click", () => {
@@ -1369,7 +1431,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       withUndo("작업 파일을 열었습니다.", () => {
         const next = Object.assign(clone(DEFAULTS), {
           hospital: d.hospital || "", pages: d.pages, cur: 0, split: !!d.split,
-          overrides: Object.assign({}, state.overrides, d.overrides || {}), customs: state.customs.slice(),
+          overrides: {}, customs: state.customs.slice(),
           src: state.src, groupBy: state.groupBy, open: state.open
         });
         (d.customs || []).forEach(c => {
@@ -1377,6 +1439,14 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
           if (i >= 0) next.customs[i] = c; else next.customs.push(c);
         });
         state = withPages(next);
+        // version 1 파일: 그때의 브라우저 전체 수정본(overrides)을 이 작업의 모든 장에 적용 (그때와 같은 모양)
+        const ov = d.overrides || {};
+        state.pages.forEach(pg => {
+          const e = {};
+          (pg.selected || []).forEach(id => { if (ov[id]) e[id] = clone(ov[id]); });
+          pg.edits = Object.assign(e, pg.edits || {});
+        });
+        loadCur();
       });
       save(); clearForm(); renderAll(); scrollToCur();
       const missing = state.pages.reduce((n, p) => n + (p.selected || []).filter(id => !getItem(id)).length, 0);
@@ -1394,7 +1464,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
 
   F("resetPage").addEventListener("click", () => {
     withUndo((state.pages.length > 1 ? (state.cur + 1) + "번째 장" : "이 장") + "의 팀명·슬로건·단락을 비웠습니다.", () => {
-      state.team = ""; state.slogan = ""; state.emoji = ""; state.selected = [];
+      state.team = ""; state.slogan = ""; state.emoji = ""; state.selected = []; state.edits = {};
     });
     save(); clearForm(); renderAll();
   });
@@ -1449,6 +1519,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   let busy = false;
   function startExport(btnId, label, fn) {
     if (busy) return;
+    commitEdit();
     const empty = state.pages.map((_, i) => pageData(i).selected.map(getItem).filter(Boolean).length ? 0 : i + 1).filter(Boolean);
     if (empty.length) {
       toast(state.pages.length > 1 ? empty.join(",") + "장에 단락이 없습니다. 단락을 넣거나 그 페이지를 삭제해 주세요." : "먼저 넣을 단락을 골라 주세요.");
@@ -1457,11 +1528,12 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     guardOverflow(label, async () => {
       const btn = F(btnId), text = btn.textContent;
       busy = true; btn.disabled = true; btn.textContent = "만드는 중…";
+      document.body.classList.add("exporting");
       try { await fn(); }
       catch (e) {
         toast(e && e.message === "lib" ? "변환 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요." : "파일을 만들지 못했습니다. 다시 시도해 주세요.");
         console.error(e);
-      } finally { busy = false; btn.disabled = false; btn.textContent = text; }
+      } finally { busy = false; btn.disabled = false; btn.textContent = text; document.body.classList.remove("exporting"); }
     });
   }
 
@@ -1728,7 +1800,156 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   F("pageTabs").addEventListener("click", e => {
     const b = e.target.closest("[data-page]"); if (b) switchPage(+b.dataset.page);
   });
+  // ───────── 미리보기 직접 편집 (2026-11-24) ─────────
+  // 지금 고치는 장의 글자를 누르면 그 자리에 입력 칸이 뜬다(원문 그대로: ** [ ] ( ) 보임). 바깥 클릭 = 반영, Esc = 취소.
+  // 핵심 지침만 Enter로 줄을 바꾸고, 나머지 칸은 Enter = 반영. 고친 내용은 그 장의 edits에만 들어간다.
+  let editing = null;
+  function beginEdit(el) {
+    const blk = el.closest(".m-block"); if (!blk) return;
+    const id = blk.dataset.id, f = el.dataset.field, line = el.dataset.line !== undefined ? +el.dataset.line : null;
+    const it = itemFor(id, state.edits); if (!it) return;
+    const raw = f === "script" ? (it.script || [])[line] || "" : String(it[f] || "");
+    const ta = document.createElement("textarea");
+    ta.className = "m-edit"; ta.value = raw; ta.rows = 1; ta.spellcheck = false;
+    el.textContent = ""; el.appendChild(ta);
+    editing = { id: id, f: f, line: line, ta: ta, raw: raw };
+    let enterAfterCompose = false;
+    const fit = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
+    ta.addEventListener("input", fit);
+    ta.addEventListener("keydown", e => {
+      // 한글 조합 중 Enter: 조합이 끝나면 바로 반영한다(두 번 누르지 않게). 핵심 지침은 Enter가 줄바꿈이라 제외
+      if (e.isComposing || e.keyCode === 229) { if (e.key === "Enter" && f !== "title") enterAfterCompose = true; return; }
+      if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+      else if (e.key === "Enter" && f !== "title") { e.preventDefault(); commitEdit(); }
+    });
+    ta.addEventListener("compositionend", () => {
+      if (!enterAfterCompose) return;
+      enterAfterCompose = false;
+      setTimeout(() => { if (editing && editing.ta === ta) commitEdit(); }, 0);
+    });
+    ta.addEventListener("blur", () => { if (editing && editing.ta === ta) commitEdit(); });
+    fit(); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+  function commitEdit() {
+    if (!editing) return;
+    const ed = editing; editing = null;
+    const v = ed.ta.value;
+    if (v === ed.raw) { renderPreview(); return; }
+    // 직접 추가 단락은 사용자가 만든 단락이라 그 단락 자체를 고친다(왼쪽 수정 창과 같은 규칙). 원본 단락은 이 장에만
+    const custom = state.customs.find(c => c.id === ed.id);
+    const apply = patch => { if (custom) { Object.assign(custom, patch); clearEdit(ed.id); } else setEdit(ed.id, patch); };
+    if (ed.f === "title") {
+      const t = v.replace(/\r\n?/g, "\n").split("\n").map(x => x.trim()).filter(Boolean).join("\n");
+      apply({ title: t || getItem(ed.id).title });   // 비우면 원래 문구로
+    } else if (ed.f === "guide") apply({ guide: unwrapParen(v) });
+    else if (ed.f === "tip") apply({ tip: v.trim() });
+    else if (ed.f === "script") {
+      const arr = (itemFor(ed.id, state.edits).script || []).slice();
+      const lines = v.split(/\r?\n/).map(x => x.trim().replace(/^[“"]|[”"]$/g, "")).filter(Boolean);
+      arr.splice.apply(arr, [ed.line, 1].concat(lines));   // 빈 줄이면 그 대사를 지운다
+      apply({ script: arr });
+    }
+    lastChange = 0;   // 끌기·미리보기 입력은 앞의 변경과 묶지 않고 되돌리기 한 단계로 남긴다
+    update();
+  }
+  function cancelEdit() { if (!editing) return; editing = null; renderPreview(); }
+
+  // ───────── 미리보기에서 끌어 옮기기 (2026-11-24) ─────────
+  // 원형 뱃지 = 그 줄(같은 단계 묶음)의 단락 전부, 단락 왼쪽 손잡이(⠿) = 그 단락 하나. 지금 고치는 장에서만.
+  // 놓을 자리는 포인터 높이와 단락 가운데 선을 비교해 정하고, 종이 위에 안내선을 그린다(배율과 무관하게 화면 좌표로 계산).
+  function moveIds(ids, beforeId) {
+    const rest = state.selected.filter(id => !ids.includes(id));
+    let at = beforeId == null ? rest.length : rest.indexOf(beforeId);
+    if (at < 0) at = rest.length;
+    const moving = state.selected.filter(id => ids.includes(id));
+    const next = rest.slice(0, at).concat(moving, rest.slice(at));
+    if (next.join("\u0001") === state.selected.join("\u0001")) return false;
+    state.selected = next;
+    return true;
+  }
+  let pvDrag = null;   // { ids, els }
+  function dropSpot(page, y) {
+    const blocks = Array.from(page.querySelectorAll(".m-block")).filter(b => !pvDrag.ids.includes(b.dataset.id));
+    for (const b of blocks) {
+      const r = b.getBoundingClientRect();
+      if (y < r.top + r.height / 2) return { beforeId: b.dataset.id, el: b, above: true };
+    }
+    const last = blocks[blocks.length - 1];
+    return { beforeId: null, el: last || null, above: false };
+  }
+  function showDrop(page, spot) {
+    let line = page.querySelector(".m-drop");
+    if (!spot.el) { if (line) line.remove(); return; }
+    if (!line) { line = document.createElement("div"); line.className = "m-drop"; page.appendChild(line); }
+    const pr = page.getBoundingClientRect(), r = spot.el.getBoundingClientRect(), k = pr.width / page.offsetWidth || 1;
+    const y = spot.above ? r.top - 4 * k : r.bottom + 4 * k;
+    line.style.left = (r.left - pr.left) / k + "px";
+    line.style.width = r.width / k + "px";
+    line.style.top = (y - pr.top) / k + "px";
+  }
+  function endPvDrag() {
+    if (!pvDrag) return;
+    pvDrag.els.forEach(el => el.classList.remove("dragging-src"));
+    document.querySelectorAll("#stage .m-drop").forEach(el => el.remove());
+    pvDrag = null;
+  }
+  F("stage").addEventListener("dragstart", e => {
+    const h = e.target.closest && e.target.closest("[data-drag]"), page = h && h.closest(".page");
+    if (!h || !page || +page.dataset.index !== state.cur) { if (h) e.preventDefault(); return; }
+    commitEdit();
+    if (!h.isConnected) { e.preventDefault(); return; }   // 고치던 칸을 반영하며 종이가 다시 그려졌으면 다시 끌어야 한다
+    const src = h;
+    const els = src.dataset.drag === "row"
+      ? Array.from(src.closest(".m-row").querySelectorAll(".m-block"))
+      : [src.closest(".m-block")];
+    pvDrag = { ids: els.map(b => b.dataset.id), els: els };
+    els.forEach(el => el.classList.add("dragging-src"));
+    e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", pvDrag.ids.join(",")); } catch (err) { /* 일부 브라우저 */ }
+    if (src.dataset.drag === "block") { try { e.dataTransfer.setDragImage(els[0], 12, 12); } catch (err) { /* 무시 */ } }
+  });
+  F("stage").addEventListener("dragover", e => {
+    if (!pvDrag) return;
+    const page = curEl(); if (!page) return;
+    if (e.target.closest && e.target.closest(".page") !== page) {   // 다른 장 위: 놓을 수 없음
+      document.querySelectorAll("#stage .m-drop").forEach(el => el.remove());
+      return;
+    }
+    e.preventDefault(); e.dataTransfer.dropEffect = "move";
+    showDrop(page, dropSpot(page, e.clientY));
+  });
+  F("stage").addEventListener("drop", e => {
+    if (!pvDrag) return;
+    if (!(e.target.closest && e.target.closest(".page") === curEl())) { endPvDrag(); return; }
+    e.preventDefault();
+    const spot = dropSpot(curEl(), e.clientY), ids = pvDrag.ids;
+    endPvDrag();
+    if (moveIds(ids, spot.beforeId)) { lastChange = 0; update(); toast(ids.length > 1 ? "단계 묶음(" + ids.length + "개)을 옮겼습니다." : "단락을 옮겼습니다."); }
+  });
+  F("stage").addEventListener("dragend", endPvDrag);
+  window.addEventListener("beforeprint", commitEdit);
+  // 지금 장의 편집 칸 위에서 누를 때: 기본 동작(포커스 이동)을 막고, 고치던 칸을 반영한 뒤 새 칸을 연다
+  function editTarget(e) {
+    if (e.button !== 0 || e.target.closest(".m-edit") || e.target.closest("[data-reset]")) return null;
+    const el = e.target.closest("[data-field]"), pg = e.target.closest(".page");
+    return el && pg && +pg.dataset.index === state.cur ? el : null;
+  }
+  function resetEdit(id) { commitEdit(); clearEdit(id); lastChange = 0; update(); toast("이 장의 단락을 원본 문구로 되돌렸습니다."); }
+  F("stage").addEventListener("mousedown", e => {
+    const r = e.button === 0 && e.target.closest("[data-reset]");
+    if (r) { e.preventDefault(); resetEdit(r.dataset.reset); return; }
+    const el = editTarget(e); if (!el) return;
+    e.preventDefault();
+    const key = { id: el.closest(".m-block").dataset.id, f: el.dataset.field, line: el.dataset.line };
+    commitEdit();   // 다른 칸을 고치던 중이면 먼저 반영 (종이가 다시 그려진다)
+    const sel = '.m-block[data-id="' + CSS.escape(key.id) + '"] [data-field="' + key.f + '"]' + (key.line !== undefined ? '[data-line="' + key.line + '"]' : "");
+    const target = curEl().querySelector(sel);
+    if (target) beginEdit(target);
+  });
   F("stage").addEventListener("click", e => {
+    const r = e.target.closest("[data-reset]");
+    if (r) { if (e.detail === 0) resetEdit(r.dataset.reset); return; }   // 마우스는 mousedown에서 처리, 키보드(Enter·Space)만 여기서
+    if (e.target.closest(".m-edit")) return;
     const pg = e.target.closest(".page"); if (pg) switchPage(+pg.dataset.index);
   });
   F("undoBtn").addEventListener("click", undo);
@@ -1746,7 +1967,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
   F("pageAdd").addEventListener("click", () => {
     // 새 페이지는 지금 페이지의 디자인·옵션·슬로건을 이어받고, 팀명·단락은 비운다. 그 뒤로는 서로 따로 바뀐다
     syncCur();
-    state.pages.push(Object.assign(curPage(), { team: "", selected: [] }));
+    state.pages.push(Object.assign(curPage(), { team: "", selected: [], edits: {} }));
     switchPage(state.pages.length - 1);
     toast(state.pages.length + "번째 페이지를 추가했습니다. 팀명과 단락을 넣어 주세요.");
   });
@@ -1792,8 +2013,11 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
+  const migrated = migrateOverrides(state);
+  if (migrated) save();
   renderAll();
   syncCur(); record();   // 되돌리기 기준점 (처음 연 상태)
+  if (migrated) toast("예전에 수정한 단락 " + migrated + "개를 단락 풀 '직접 추가'에 '내 수정본'으로 옮겼습니다. 이제 수정은 그 장에만 적용됩니다.");
   // 여러 장일 때는 마지막으로 고치던 페이지가 보이게 한다
   if (state.cur > 0) requestAnimationFrame(scrollToCur);
 })();
