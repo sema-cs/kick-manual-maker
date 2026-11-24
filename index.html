@@ -1341,9 +1341,28 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
     saveBlob(new Blob([JSON.stringify(doc, null, 2)], { type: "application/json" }), name,
       "작업 파일을 저장했습니다. 병원 폴더에 두었다가 '열기'로 이어서 작업하세요.");
   });
-  F("workOpen").addEventListener("click", () => F("workFile").click());
+  // 열기 창은 다운로드 폴더에서 시작한다(저장 버튼이 다운로드 폴더에 저장하므로).
+  // 크롬·엣지에서 직접 연 경우만 가능하고, 웹 링크(다른 페이지 안에 들어간 화면)나 다른 브라우저는 기존 파일 선택 창을 쓴다.
+  F("workOpen").addEventListener("click", async () => {
+    if (!EMBEDDED && window.showOpenFilePicker) {
+      try {
+        const [h] = await window.showOpenFilePicker({
+          startIn: "downloads", multiple: false,
+          types: [{ description: "킥매뉴얼 작업 파일", accept: { "application/json": [".json"] } }]
+        });
+        openWorkFile(await h.getFile());
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") return;   // 사용자가 창을 닫음
+      }
+    }
+    F("workFile").click();
+  });
   F("workFile").addEventListener("change", e => {
-    const file = e.target.files[0]; if (!file) return;
+    const file = e.target.files[0]; e.target.value = "";
+    if (file) openWorkFile(file);
+  });
+  function openWorkFile(file) {
     file.text().then(txt => {
       const d = JSON.parse(txt);
       if (d.app !== WORK_APP || d.kind !== "work" || !Array.isArray(d.pages) || !d.pages.length) throw new Error("form");
@@ -1363,8 +1382,7 @@ input[type=range] { width: 100%; accent-color: var(--primary); }
       const missing = state.pages.reduce((n, p) => n + (p.selected || []).filter(id => !getItem(id)).length, 0);
       if (missing) toast("작업 파일을 열었습니다. 지금 단락 데이터에 없는 단락 " + missing + "개는 빠졌습니다.");
     }).catch(() => toast("작업 파일을 열지 못했습니다. '작업 파일 저장'으로 만든 .json 파일인지 확인해 주세요."));
-    e.target.value = "";
-  });
+  }
   F("resumeBtn").addEventListener("click", () => {
     const p = loadPrev();
     if (!p) { renderResume(); return; }
