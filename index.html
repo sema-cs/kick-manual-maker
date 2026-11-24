@@ -1537,13 +1537,13 @@ body.exporting .page [data-field] { outline: none !important; background: none !
     });
   }
 
-  // i를 주면 그 페이지 한 장짜리 파일 이름, 안 주면 전체 파일 이름
+  // 회사 파일명 규칙: (P)결과(D)계획_병원명_CS_CS매뉴얼_Kick manual_YYYYMMDD
+  // i를 주면 '장마다 따로' 한 장짜리 파일 — 이름이 겹치지 않게 부서명(없으면 N장)을 날짜 앞에 붙인다
   function fileName(ext, i) {
     const d = new Date();
-    const day = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-    const n = state.pages.length, one = i !== undefined || n === 1;
-    const team = one ? pageData(i === undefined ? 0 : i).team : "";
-    const name = [state.hospital, team, "킥매뉴얼", one ? (n > 1 && !team ? (i + 1) + "장" : "") : n + "장", day]
+    const day = d.getFullYear() + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0");
+    const part = i === undefined ? "" : (String(pageData(i).team || "").trim() || (i + 1) + "장");
+    const name = ["(P)결과(D)계획", state.hospital, "CS", "CS매뉴얼", "Kick manual", part, day]
       .map(s => String(s || "").trim()).filter(Boolean).join("_");
     return name.replace(/[\\/:*?"<>|]/g, "") + "." + ext;
   }
